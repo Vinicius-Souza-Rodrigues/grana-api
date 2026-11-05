@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Grana.Api/Grana.Api.csproj" />
+    <Project Path="src/Grana.Application/Grana.Application.csproj" />
+    <Project Path="src/Grana.Domain/Grana.Domain.csproj" />
+    <Project Path="src/Grana.Infrastructure/Grana.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Grana.Tests/Grana.Tests.csproj" />
+  </Folder>
+</Solution>
