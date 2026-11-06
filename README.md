@@ -98,7 +98,7 @@ dotnet test
 
 ## Sobre o desenvolvimento
 
-Fiz este projeto para mostrar como eu programo. Por isso, escrevi todo o código sozinho, sem usar Inteligência Artificial. O domínio, as regras de negócio, a arquitetura e os testes são decisões minhas.
+Fiz este projeto para mostrar como eu programo. Por isso, escrevi todo o código sozinho, sem usar Inteligência Artificial. A modelagem do domínio, a implementação das regras de negócio, a arquitetura e os testes são decisões minhas.
 
 O README também fui eu que escrevi. Usei IA só para revisar o texto: corrigir a ortografia, organizar o layout e melhorar algumas frases.
 
