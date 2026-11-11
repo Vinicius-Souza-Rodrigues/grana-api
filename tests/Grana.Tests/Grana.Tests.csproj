@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Grana.Domain\Grana.Domain.csproj" />
     <ProjectReference Include="..\..\src\Grana.Application\Grana.Application.csproj" />
+    <ProjectReference Include="..\..\src\Grana.Api\Grana.Api.csproj" />
   </ItemGroup>
 
 </Project>
