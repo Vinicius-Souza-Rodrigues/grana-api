@@ -11,14 +11,18 @@ public sealed class Conta
         Nome = nome;
         TipoConta = tipoConta;
         Saldo = saldo;
+        SaldoInicial = saldo;
         StatusAtividadeConta = StatusAtividadeContaEnum.Ativo;
+        CriadoEm = DateTime.UtcNow;
     }
 
     public Guid Id { get; private set; }
     public string Nome { get; private set; }
     public TipoContaEnum TipoConta { get; private set; }
     public decimal Saldo { get; private set; }
+    public decimal SaldoInicial { get; private set; }
     public StatusAtividadeContaEnum StatusAtividadeConta { get; private set; }
+    public DateTime CriadoEm { get; private set; }
 
     public const int TamanhoMaximoNome = 60;
     public const int TamanhoMinimoNome = 3;

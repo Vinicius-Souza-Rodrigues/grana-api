@@ -1,5 +1,7 @@
 using Application.Dtos;
 using Application.Interfaces;
+using Domain.Enums;
+using Domain.Models;
 using Grana.Api.Controllers;
 using Grana.Domain.Notificacoes;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +18,17 @@ public sealed class ContaController(IContaService contaService) : ApiController
 
         var conta = await contaService.CriarConta(contaCriar, notificacao, cancellationToken);
 
-        return ResponderCriado(notificacao, nameof(ObterContaPorId), new { id = conta?.Id }, "Conta criada com sucesso.", conta);
+        return ResponderCriado(notificacao, nameof(ObterContaPorId), new { id = conta?.Id }, "Conta criada com sucesso.", MontarDetalhe(conta));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ListarContas([FromQuery] bool incluirInativas, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        var contas = await contaService.ListarContas(incluirInativas, cancellationToken);
+
+        return Responder(notificacao, 200, "Contas encontradas.", contas.Select(MontarItem).ToList());
     }
 
     [HttpGet("{id:guid}")]
@@ -26,7 +38,35 @@ public sealed class ContaController(IContaService contaService) : ApiController
 
         var conta = await contaService.ObterContaPorId(id, notificacao, cancellationToken);
 
-        return Responder(notificacao, 200, "Conta encontrada.", conta);
+        return Responder(notificacao, 200, "Conta encontrada.", MontarDetalhe(conta));
+    }
+
+    private static object MontarItem(Conta conta)
+    {
+        return new
+        {
+            id = conta.Id,
+            nome = conta.Nome,
+            tipo = conta.TipoConta,
+            saldo = conta.Saldo,
+            ativa = conta.StatusAtividadeConta == StatusAtividadeContaEnum.Ativo
+        };
+    }
+
+    private static object MontarDetalhe(Conta conta)
+    {
+        if (conta is null)
+            return null;
+
+        return new
+        {
+            id = conta.Id,
+            nome = conta.Nome,
+            tipo = conta.TipoConta,
+            saldo = conta.Saldo,
+            ativa = conta.StatusAtividadeConta == StatusAtividadeContaEnum.Ativo,
+            saldoInicial = conta.SaldoInicial,
+            criadoEm = conta.CriadoEm
+        };
     }
 }
-
