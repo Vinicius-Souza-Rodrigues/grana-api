@@ -1,3 +1,18 @@
 @Grana.Api_HostAddress = http://localhost:5180
 
 ###
+
+POST {{Grana.Api_HostAddress}}/api/contas
+Content-Type: application/json
+
+{
+  "nome": "Nubank",
+  "tipo": "Corrente",
+  "saldoInicial": 1500
+}
+
+###
+
+GET {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000
+
+###
