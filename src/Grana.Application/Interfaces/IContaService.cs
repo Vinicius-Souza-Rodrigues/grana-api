@@ -10,6 +10,8 @@ public interface IContaService
     
     Task<Conta> ObterContaPorId(Guid idConta, Notificacao notificacao, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Conta>> ListarContas(bool incluirInativas, CancellationToken cancellationToken);
+
     Task<Notificacao> DesativarConta(Guid idConta, CancellationToken cancellationToken);
 
     Task<Notificacao> ReativarConta(Guid idConta, CancellationToken cancellationToken);

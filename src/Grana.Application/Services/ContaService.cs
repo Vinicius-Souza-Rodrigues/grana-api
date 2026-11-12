@@ -38,6 +38,11 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
         return conta;
     }
 
+    public Task<IReadOnlyList<Conta>> ListarContas(bool incluirInativas, CancellationToken cancellationToken)
+    {
+        return contaRepository.ListarContas(incluirInativas, cancellationToken);
+    }
+
     public async Task<Notificacao> DesativarConta(Guid idConta, CancellationToken cancellationToken)
     {
         var notificacao = new Notificacao();

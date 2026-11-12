@@ -30,4 +30,14 @@ public sealed class ContaRepository : IContaRepository
 
         return Task.FromResult(existe);
     }
+
+    public Task<IReadOnlyList<Conta>> ListarContas(bool incluirInativas, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Conta> contas = _contas
+            .Where(c => incluirInativas || c.StatusAtividadeConta == StatusAtividadeContaEnum.Ativo)
+            .OrderBy(c => c.Nome)
+            .ToList();
+
+        return Task.FromResult(contas);
+    }
 }
