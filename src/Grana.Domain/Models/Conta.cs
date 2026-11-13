@@ -64,7 +64,7 @@ public sealed class Conta
             notificacao.Adicionar("o nome nao pode ter menos que 3 caracteres ou mais que 60");
 
         if (StatusAtividadeConta == StatusAtividadeContaEnum.Inativo)
-            notificacao.Adicionar("O status de atividade da conta não pode ser inativo");
+            notificacao.Adicionar("Não é possível editar uma conta desativada.");
 
         if (notificacao.TemNotificacoes)
             return;

@@ -22,9 +22,10 @@ public sealed class ContaRepository : IContaRepository
         return Task.FromResult(conta);
     }
 
-    public Task<bool> ExisteContaAtivaComNome(string nome, CancellationToken cancellationToken)
+    public Task<bool> ExisteContaAtivaComNome(string nome, Guid idContaIgnorada, CancellationToken cancellationToken)
     {
         var existe = _contas.Exists(c =>
+            c.Id != idContaIgnorada &&
             c.StatusAtividadeConta == StatusAtividadeContaEnum.Ativo &&
             string.Equals(c.Nome, nome, StringComparison.OrdinalIgnoreCase));
 

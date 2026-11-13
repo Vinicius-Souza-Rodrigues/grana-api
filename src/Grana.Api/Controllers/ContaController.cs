@@ -41,6 +41,16 @@ public sealed class ContaController(IContaService contaService) : ApiController
         return Responder(notificacao, 200, "Conta encontrada.", MontarDetalhe(conta));
     }
 
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> RenomearConta(Guid id, ContaRenomearDto contaRenomear, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        var conta = await contaService.RenomearConta(id, contaRenomear, notificacao, cancellationToken);
+
+        return Responder(notificacao, 200, "Conta atualizada com sucesso.", MontarDetalhe(conta));
+    }
+
     private static object MontarItem(Conta conta)
     {
         return new

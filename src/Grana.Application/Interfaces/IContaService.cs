@@ -12,6 +12,8 @@ public interface IContaService
 
     Task<IReadOnlyList<Conta>> ListarContas(bool incluirInativas, CancellationToken cancellationToken);
 
+    Task<Conta> RenomearConta(Guid idConta, ContaRenomearDto dto, Notificacao notificacao, CancellationToken cancellationToken);
+
     Task<Notificacao> DesativarConta(Guid idConta, CancellationToken cancellationToken);
 
     Task<Notificacao> ReativarConta(Guid idConta, CancellationToken cancellationToken);

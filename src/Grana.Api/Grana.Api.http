@@ -24,3 +24,12 @@ GET {{Grana.Api_HostAddress}}/api/contas?incluirInativas=true
 GET {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000
 
 ###
+
+PUT {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "nome": "Nubank PJ"
+}
+
+###
