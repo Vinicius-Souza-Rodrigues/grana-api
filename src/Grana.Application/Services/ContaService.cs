@@ -17,7 +17,7 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
         if (notificacao.TemNotificacoes)
             return null;
 
-        if (await contaRepository.ExisteContaAtivaComNome(conta.Nome, cancellationToken))
+        if (await contaRepository.ExisteContaAtivaComNome(conta.Nome, conta.Id, cancellationToken))
         {
             notificacao.AdicionarConflito("Já existe uma conta ativa com esse nome.");
             return null;
@@ -41,6 +41,30 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
     public Task<IReadOnlyList<Conta>> ListarContas(bool incluirInativas, CancellationToken cancellationToken)
     {
         return contaRepository.ListarContas(incluirInativas, cancellationToken);
+    }
+
+    public async Task<Conta> RenomearConta(Guid idConta, ContaRenomearDto dto, Notificacao notificacao, CancellationToken cancellationToken)
+    {
+        var conta = await contaRepository.ObterContaPorId(idConta, cancellationToken);
+
+        if (conta is null)
+        {
+            notificacao.AdicionarNaoEncontrado("Conta não encontrada.");
+            return null;
+        }
+
+        if (await contaRepository.ExisteContaAtivaComNome(dto.nome?.Trim(), conta.Id, cancellationToken))
+        {
+            notificacao.AdicionarConflito("Já existe uma conta ativa com esse nome.");
+            return null;
+        }
+
+        conta.RenomearNome(dto.nome, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return null;
+
+        return conta;
     }
 
     public async Task<Notificacao> DesativarConta(Guid idConta, CancellationToken cancellationToken)

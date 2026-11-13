@@ -8,7 +8,7 @@ public interface IContaRepository
 
     Task<Conta> ObterContaPorId(Guid idConta, CancellationToken cancellationToken);
 
-    Task<bool> ExisteContaAtivaComNome(string nome, CancellationToken cancellationToken);
+    Task<bool> ExisteContaAtivaComNome(string nome, Guid idContaIgnorada, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<Conta>> ListarContas(bool incluirInativas, CancellationToken cancellationToken);
 }

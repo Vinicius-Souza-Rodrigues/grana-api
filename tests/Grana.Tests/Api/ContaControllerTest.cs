@@ -103,6 +103,59 @@ public sealed class ContaControllerTest
         Assert.Equal(404, resultado.StatusCode);
     }
 
+    [Fact]
+    public async Task RenomearContaComNomeValido()
+    {
+        var conta = await AdicionarConta("Nubank");
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.RenomearConta(conta.Id, new ContaRenomearDto("Nubank PJ"), CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal("Nubank PJ", LerJson(resultado).GetProperty("dados").GetProperty("nome").GetString());
+    }
+
+    [Fact]
+    public async Task RenomearContaComMesmoNome()
+    {
+        var conta = await AdicionarConta("Nubank");
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.RenomearConta(conta.Id, new ContaRenomearDto("Nubank"), CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task RenomearContaInativa()
+    {
+        var conta = await AdicionarConta("Nubank");
+        conta.Desativar(new Notificacao());
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.RenomearConta(conta.Id, new ContaRenomearDto("Nubank PJ"), CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal("Não é possível editar uma conta desativada.", LerJson(resultado).GetProperty("erros")[0].GetString());
+    }
+
+    [Fact]
+    public async Task RenomearContaComNomeDeOutraContaAtiva()
+    {
+        await AdicionarConta("Nubank");
+        var conta = await AdicionarConta("Inter");
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.RenomearConta(conta.Id, new ContaRenomearDto("nubank"), CancellationToken.None));
+
+        Assert.Equal(409, resultado.StatusCode);
+    }
+
+    private async Task<Conta> AdicionarConta(string nome)
+    {
+        var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, 0, new Notificacao());
+
+        await _repositorio.AdicionarConta(conta, CancellationToken.None);
+
+        return conta;
+    }
+
     private async Task AdicionarDuasAtivasEUmaInativa()
     {
         var inativa = Conta.CriacaoConta("Carteira", TipoContaEnum.Carteira, 0, new Notificacao());
