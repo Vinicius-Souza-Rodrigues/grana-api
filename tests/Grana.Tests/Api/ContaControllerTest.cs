@@ -147,9 +147,76 @@ public sealed class ContaControllerTest
         Assert.Equal(409, resultado.StatusCode);
     }
 
-    private async Task<Conta> AdicionarConta(string nome)
+    [Fact]
+    public async Task DesativarContaComSaldoZero()
     {
-        var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, 0, new Notificacao());
+        var conta = await AdicionarConta("Nubank");
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.DesativarConta(conta.Id, CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.False(LerJson(resultado).GetProperty("dados").GetProperty("ativa").GetBoolean());
+    }
+
+    [Fact]
+    public async Task DesativarContaComSaldo()
+    {
+        var conta = await AdicionarConta("Nubank", 0.01m);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.DesativarConta(conta.Id, CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task DesativarContaJaInativa()
+    {
+        var conta = await AdicionarConta("Nubank");
+        conta.Desativar(new Notificacao());
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.DesativarConta(conta.Id, CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal("A conta já está desativada.", LerJson(resultado).GetProperty("erros")[0].GetString());
+    }
+
+    [Fact]
+    public async Task ReativarContaInativa()
+    {
+        var conta = await AdicionarConta("Nubank");
+        conta.Desativar(new Notificacao());
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ReativarConta(conta.Id, CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.True(LerJson(resultado).GetProperty("dados").GetProperty("ativa").GetBoolean());
+    }
+
+    [Fact]
+    public async Task ReativarContaComNomeDuplicado()
+    {
+        var conta = await AdicionarConta("Nubank");
+        conta.Desativar(new Notificacao());
+        await AdicionarConta("nubank");
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ReativarConta(conta.Id, CancellationToken.None));
+
+        Assert.Equal(409, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task ReativarContaJaAtiva()
+    {
+        var conta = await AdicionarConta("Nubank");
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ReativarConta(conta.Id, CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+    }
+
+    private async Task<Conta> AdicionarConta(string nome, decimal saldo = 0)
+    {
+        var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, saldo, new Notificacao());
 
         await _repositorio.AdicionarConta(conta, CancellationToken.None);
 

@@ -67,38 +67,46 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
         return conta;
     }
 
-    public async Task<Notificacao> DesativarConta(Guid idConta, CancellationToken cancellationToken)
+    public async Task<Conta> DesativarConta(Guid idConta, Notificacao notificacao, CancellationToken cancellationToken)
     {
-        var notificacao = new Notificacao();
-
         var conta = await contaRepository.ObterContaPorId(idConta, cancellationToken);
 
         if (conta is null)
         {
             notificacao.AdicionarNaoEncontrado("Conta não encontrada.");
-            return notificacao;
+            return null;
         }
 
         conta.Desativar(notificacao);
 
-        return notificacao;
+        if (notificacao.TemNotificacoes)
+            return null;
+
+        return conta;
     }
 
-    public async Task<Notificacao> ReativarConta(Guid idConta, CancellationToken cancellationToken)
+    public async Task<Conta> ReativarConta(Guid idConta, Notificacao notificacao, CancellationToken cancellationToken)
     {
-        var notificacao = new Notificacao();
-
         var conta = await contaRepository.ObterContaPorId(idConta, cancellationToken);
 
         if (conta is null)
         {
             notificacao.AdicionarNaoEncontrado("Conta não encontrada.");
-            return notificacao;
+            return null;
+        }
+
+        if (await contaRepository.ExisteContaAtivaComNome(conta.Nome, conta.Id, cancellationToken))
+        {
+            notificacao.AdicionarConflito("Já existe uma conta ativa com esse nome.");
+            return null;
         }
 
         conta.Reativar(notificacao);
 
-        return notificacao;
+        if (notificacao.TemNotificacoes)
+            return null;
+
+        return conta;
     }
 
     public async Task<Notificacao> CreditarConta(Guid idConta, decimal valorCredito, CancellationToken cancellationToken)
