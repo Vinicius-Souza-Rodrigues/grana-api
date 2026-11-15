@@ -33,3 +33,11 @@ Content-Type: application/json
 }
 
 ###
+
+PATCH {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000/desativar
+
+###
+
+PATCH {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000/reativar
+
+###

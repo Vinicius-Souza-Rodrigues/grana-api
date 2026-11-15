@@ -51,6 +51,26 @@ public sealed class ContaController(IContaService contaService) : ApiController
         return Responder(notificacao, 200, "Conta atualizada com sucesso.", MontarDetalhe(conta));
     }
 
+    [HttpPatch("{id:guid}/desativar")]
+    public async Task<IActionResult> DesativarConta(Guid id, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        var conta = await contaService.DesativarConta(id, notificacao, cancellationToken);
+
+        return Responder(notificacao, 200, "Conta desativada com sucesso.", MontarDetalhe(conta));
+    }
+
+    [HttpPatch("{id:guid}/reativar")]
+    public async Task<IActionResult> ReativarConta(Guid id, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        var conta = await contaService.ReativarConta(id, notificacao, cancellationToken);
+
+        return Responder(notificacao, 200, "Conta reativada com sucesso.", MontarDetalhe(conta));
+    }
+
     private static object MontarItem(Conta conta)
     {
         return new
