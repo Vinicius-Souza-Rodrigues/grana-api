@@ -10,4 +10,6 @@ public interface ICategoriaRepository
     Task<Categoria> ObterCategoriaPorId(Guid idCategoria, CancellationToken cancellationToken);
 
     Task<bool> ExisteCategoriaComNome(string nome, TipoCategoriaEnum tipoCategoria, Guid idCategoriaIgnorada, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<Categoria>> ListarCategorias(TipoCategoriaEnum? tipoCategoria, CancellationToken cancellationToken);
 }

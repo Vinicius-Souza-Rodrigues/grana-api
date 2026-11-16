@@ -9,4 +9,6 @@ public interface ICategoriaService
     Task<Categoria> CriarCategoria(CategoriaCriarDto dto, Notificacao notificacao, CancellationToken cancellationToken);
 
     Task<Categoria> ObterCategoriaPorId(Guid idCategoria, Notificacao notificacao, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<Categoria>> ListarCategorias(string tipo, Notificacao notificacao, CancellationToken cancellationToken);
 }

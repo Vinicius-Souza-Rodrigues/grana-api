@@ -31,4 +31,14 @@ public sealed class CategoriaRepository : ICategoriaRepository
 
         return Task.FromResult(existe);
     }
+
+    public Task<IReadOnlyList<Categoria>> ListarCategorias(TipoCategoriaEnum? tipoCategoria, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Categoria> categorias = _categorias
+            .Where(c => tipoCategoria is null || c.TipoCategoria == tipoCategoria)
+            .OrderBy(c => c.Nome)
+            .ToList();
+
+        return Task.FromResult(categorias);
+    }
 }
