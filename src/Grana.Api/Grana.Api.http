@@ -41,3 +41,18 @@ PATCH {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000/
 PATCH {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000/reativar
 
 ###
+
+POST {{Grana.Api_HostAddress}}/api/categorias
+Content-Type: application/json
+
+{
+  "nome": "Alimentação",
+  "tipo": "Despesa",
+  "orcamentoMensal": 800
+}
+
+###
+
+GET {{Grana.Api_HostAddress}}/api/categorias/00000000-0000-0000-0000-000000000000
+
+###
