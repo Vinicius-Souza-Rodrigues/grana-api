@@ -20,6 +20,16 @@ public sealed class CategoriaController(ICategoriaService categoriaService) : Ap
         return ResponderCriado(notificacao, nameof(ObterCategoriaPorId), new { id = categoria?.Id }, "Categoria criada com sucesso.", MontarDetalhe(categoria));
     }
 
+    [HttpGet]
+    public async Task<IActionResult> ListarCategorias([FromQuery] string tipo, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        var categorias = await categoriaService.ListarCategorias(tipo, notificacao, cancellationToken);
+
+        return Responder(notificacao, 200, "Categorias encontradas.", categorias?.Select(MontarDetalhe).ToList());
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> ObterCategoriaPorId(Guid id, CancellationToken cancellationToken)
     {

@@ -74,10 +74,64 @@ public sealed class CategoriaControllerTest
     }
 
     [Fact]
+    public async Task ListarCategoriasSemFiltro()
+    {
+        await AdicionarCategoriasDeDespesaEReceita();
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarCategorias(null, CancellationToken.None));
+
+        var dados = LerJson(resultado).GetProperty("dados");
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal(3, dados.GetArrayLength());
+        Assert.Equal("Alimentação", dados[0].GetProperty("nome").GetString());
+        Assert.Equal("Transporte", dados[2].GetProperty("nome").GetString());
+    }
+
+    [Fact]
+    public async Task ListarCategoriasDeDespesa()
+    {
+        await AdicionarCategoriasDeDespesaEReceita();
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarCategorias("Despesa", CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal(2, LerJson(resultado).GetProperty("dados").GetArrayLength());
+    }
+
+    [Theory]
+    [InlineData("Xpto")]
+    [InlineData("99")]
+    public async Task ListarCategoriasComTipoInvalido(string tipo)
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarCategorias(tipo, CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task ObterCategoriaExistente()
+    {
+        var criada = Assert.IsType<CreatedAtActionResult>(await _controller.CriarCategoria(new CategoriaCriarDto("Alimentação", "Despesa", 800), CancellationToken.None));
+        var id = (Guid)criada.RouteValues["id"];
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ObterCategoriaPorId(id, CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal("Alimentação", LerJson(resultado).GetProperty("dados").GetProperty("nome").GetString());
+    }
+
+    [Fact]
     public async Task ObterCategoriaInexistente()
     {
         var resultado = Assert.IsType<ObjectResult>(await _controller.ObterCategoriaPorId(Guid.NewGuid(), CancellationToken.None));
 
         Assert.Equal(404, resultado.StatusCode);
+    }
+
+    private async Task AdicionarCategoriasDeDespesaEReceita()
+    {
+        await _controller.CriarCategoria(new CategoriaCriarDto("Transporte", "Despesa", null), CancellationToken.None);
+        await _controller.CriarCategoria(new CategoriaCriarDto("Salário", "Receita", null), CancellationToken.None);
+        await _controller.CriarCategoria(new CategoriaCriarDto("Alimentação", "Despesa", 800), CancellationToken.None);
     }
 }
