@@ -51,4 +51,28 @@ public sealed class CategoriaService(ICategoriaRepository categoriaRepository) :
 
         return await categoriaRepository.ListarCategorias(tipoCategoria, cancellationToken);
     }
+
+    public async Task<Categoria> EditarCategoria(Guid idCategoria, CategoriaEditarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
+    {
+        var categoria = await categoriaRepository.ObterCategoriaPorId(idCategoria, cancellationToken);
+
+        if (categoria is null)
+        {
+            notificacao.AdicionarNaoEncontrado("Categoria não encontrada.");
+            return null;
+        }
+
+        if (await categoriaRepository.ExisteCategoriaComNome(dto.nome?.Trim(), categoria.TipoCategoria, categoria.Id, cancellationToken))
+        {
+            notificacao.AdicionarConflito("Já existe uma categoria com esse nome para esse tipo.");
+            return null;
+        }
+
+        categoria.Editar(dto.nome, dto.orcamentoMensal, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return null;
+
+        return categoria;
+    }
 }
