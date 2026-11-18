@@ -116,6 +116,42 @@ public sealed class CategoriaTest
     }
 
     [Fact]
+    public void EditarCategoriaComDadosValidos()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, 800m, new Notificacao());
+
+        categoria.Editar(" Supermercado ", 1000m, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal("Supermercado", categoria.Nome);
+        Assert.Equal(1000m, categoria.OrcamentoMensal);
+    }
+
+    [Fact]
+    public void EditarCategoriaComNomeInvalidoNaoAlteraOrcamento()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, 800m, new Notificacao());
+
+        categoria.Editar("a", 1000m, _notificacao);
+
+        Assert.True(_notificacao.TemNotificacoes);
+        Assert.Equal("Mercado", categoria.Nome);
+        Assert.Equal(800m, categoria.OrcamentoMensal);
+    }
+
+    [Fact]
+    public void EditarCategoriaComOrcamentoInvalidoNaoAlteraNome()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, 800m, new Notificacao());
+
+        categoria.Editar("Supermercado", 0, _notificacao);
+
+        Assert.True(_notificacao.TemNotificacoes);
+        Assert.Equal("Mercado", categoria.Nome);
+        Assert.Equal(800m, categoria.OrcamentoMensal);
+    }
+
+    [Fact]
     public void RenomearCategoriaComNomeValido()
     {
         var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());

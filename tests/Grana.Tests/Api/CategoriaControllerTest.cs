@@ -128,6 +128,97 @@ public sealed class CategoriaControllerTest
         Assert.Equal(404, resultado.StatusCode);
     }
 
+    [Fact]
+    public async Task EditarCategoriaComDadosValidos()
+    {
+        var id = await CriarCategoria("Alimentação", "Despesa", 800);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(id, new CategoriaEditarDto("Mercado", 1000), CancellationToken.None));
+
+        var dados = LerJson(resultado).GetProperty("dados");
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal("Mercado", dados.GetProperty("nome").GetString());
+        Assert.Equal(1000m, dados.GetProperty("orcamentoMensal").GetDecimal());
+    }
+
+    [Fact]
+    public async Task EditarCategoriaDespesaRemovendoOrcamento()
+    {
+        var id = await CriarCategoria("Alimentação", "Despesa", 800);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(id, new CategoriaEditarDto("Alimentação", null), CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.False(LerJson(resultado).GetProperty("dados").TryGetProperty("orcamentoMensal", out _));
+    }
+
+    [Fact]
+    public async Task EditarCategoriaReceitaComOrcamento()
+    {
+        var id = await CriarCategoria("Salário", "Receita", null);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(id, new CategoriaEditarDto("Salário", 500), CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task EditarCategoriaComNomeInvalido()
+    {
+        var id = await CriarCategoria("Alimentação", "Despesa", null);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(id, new CategoriaEditarDto("a", null), CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task EditarCategoriaComNomeDeOutraDoMesmoTipo()
+    {
+        await CriarCategoria("Alimentação", "Despesa", null);
+        var id = await CriarCategoria("Transporte", "Despesa", null);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(id, new CategoriaEditarDto("alimentação", null), CancellationToken.None));
+
+        Assert.Equal(409, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task EditarCategoriaComNomeDeOutraDeOutroTipo()
+    {
+        await CriarCategoria("Alimentação", "Despesa", null);
+        var id = await CriarCategoria("Salário", "Receita", null);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(id, new CategoriaEditarDto("alimentação", null), CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task EditarCategoriaComMesmoNome()
+    {
+        var id = await CriarCategoria("Alimentação", "Despesa", null);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(id, new CategoriaEditarDto("ALIMENTAÇÃO", null), CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task EditarCategoriaInexistente()
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(Guid.NewGuid(), new CategoriaEditarDto("Mercado", null), CancellationToken.None));
+
+        Assert.Equal(404, resultado.StatusCode);
+    }
+
+    private async Task<Guid> CriarCategoria(string nome, string tipo, decimal? orcamentoMensal)
+    {
+        var resultado = Assert.IsType<CreatedAtActionResult>(await _controller.CriarCategoria(new CategoriaCriarDto(nome, tipo, orcamentoMensal), CancellationToken.None));
+
+        return (Guid)resultado.RouteValues["id"];
+    }
+
     private async Task AdicionarCategoriasDeDespesaEReceita()
     {
         await _controller.CriarCategoria(new CategoriaCriarDto("Transporte", "Despesa", null), CancellationToken.None);

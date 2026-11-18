@@ -38,6 +38,21 @@ public sealed class Categoria
         return new Categoria(nome, tipoCategoria, orcamentoMensal);
     }
 
+    public void Editar(string nome, decimal? orcamentoMensal, Notificacao notificacao)
+    {
+        nome = nome?.Trim();
+
+        ValidarNome(nome, notificacao);
+
+        ValidarOrcamento(TipoCategoria, orcamentoMensal, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        Nome = nome;
+        OrcamentoMensal = orcamentoMensal;
+    }
+
     public void RenomearNome(string nome, Notificacao notificacao)
     {
         nome = nome?.Trim();

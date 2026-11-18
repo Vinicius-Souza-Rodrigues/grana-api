@@ -40,6 +40,16 @@ public sealed class CategoriaController(ICategoriaService categoriaService) : Ap
         return Responder(notificacao, 200, "Categoria encontrada.", MontarDetalhe(categoria));
     }
 
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> EditarCategoria(Guid id, CategoriaEditarDto categoriaEditar, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        var categoria = await categoriaService.EditarCategoria(id, categoriaEditar, notificacao, cancellationToken);
+
+        return Responder(notificacao, 200, "Categoria atualizada com sucesso.", MontarDetalhe(categoria));
+    }
+
     private static object MontarDetalhe(Categoria categoria)
     {
         if (categoria is null)
