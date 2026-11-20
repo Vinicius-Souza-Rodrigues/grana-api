@@ -16,6 +16,7 @@ builder.Services.AddScoped<IContaService, ContaService>();
 builder.Services.AddSingleton<IContaRepository, ContaRepository>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddSingleton<ICategoriaRepository, CategoriaRepository>();
+builder.Services.AddSingleton<ILancamentoRepository, LancamentoRepository>();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<TratadorDeExcecoes>();

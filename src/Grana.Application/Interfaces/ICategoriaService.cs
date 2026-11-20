@@ -13,4 +13,6 @@ public interface ICategoriaService
     Task<IReadOnlyList<Categoria>> ListarCategorias(string tipo, Notificacao notificacao, CancellationToken cancellationToken);
 
     Task<Categoria> EditarCategoria(Guid idCategoria, CategoriaEditarDto dto, Notificacao notificacao, CancellationToken cancellationToken);
+
+    Task ExcluirCategoria(Guid idCategoria, Notificacao notificacao, CancellationToken cancellationToken);
 }

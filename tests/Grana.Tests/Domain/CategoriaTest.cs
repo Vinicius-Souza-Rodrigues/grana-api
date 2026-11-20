@@ -152,6 +152,26 @@ public sealed class CategoriaTest
     }
 
     [Fact]
+    public void ValidarExclusaoSemLancamentos()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
+
+        categoria.ValidarExclusao(false, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+    }
+
+    [Fact]
+    public void ValidarExclusaoComLancamentos()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
+
+        categoria.ValidarExclusao(true, _notificacao);
+
+        Assert.Contains("Não é possível excluir uma categoria com lançamentos.", _notificacao.Notificacoes);
+    }
+
+    [Fact]
     public void RenomearCategoriaComNomeValido()
     {
         var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());

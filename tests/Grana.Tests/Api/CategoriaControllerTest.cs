@@ -3,6 +3,8 @@ using System.Text.Json.Serialization;
 using Api.Controllers;
 using Application.Dtos;
 using Application.Services;
+using Domain.Models;
+using Grana.Domain.Notificacoes;
 using Infraestructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +17,14 @@ public sealed class CategoriaControllerTest
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private readonly CategoriaController _controller = new(new CategoriaService(new CategoriaRepository()));
+    private readonly CategoriaRepository _categoriaRepositorio = new();
+    private readonly LancamentoRepository _lancamentoRepositorio = new();
+    private readonly CategoriaController _controller;
+
+    public CategoriaControllerTest()
+    {
+        _controller = new CategoriaController(new CategoriaService(_categoriaRepositorio, _lancamentoRepositorio));
+    }
 
     private static JsonElement LerJson(ObjectResult resultado)
         => JsonDocument.Parse(JsonSerializer.Serialize(resultado.Value, _opcoesJson)).RootElement;
@@ -208,6 +217,40 @@ public sealed class CategoriaControllerTest
     public async Task EditarCategoriaInexistente()
     {
         var resultado = Assert.IsType<ObjectResult>(await _controller.EditarCategoria(Guid.NewGuid(), new CategoriaEditarDto("Mercado", null), CancellationToken.None));
+
+        Assert.Equal(404, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task ExcluirCategoriaSemLancamentos()
+    {
+        var id = await CriarCategoria("Alimentação", "Despesa", null);
+
+        var resultado = Assert.IsType<NoContentResult>(await _controller.ExcluirCategoria(id, CancellationToken.None));
+
+        Assert.Equal(204, resultado.StatusCode);
+        Assert.Null(await _categoriaRepositorio.ObterCategoriaPorId(id, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ExcluirCategoriaComLancamentos()
+    {
+        var id = await CriarCategoria("Alimentação", "Despesa", null);
+        var categoria = await _categoriaRepositorio.ObterCategoriaPorId(id, CancellationToken.None);
+        var lancamento = Lancamento.CriacaoLancamento(Guid.NewGuid(), categoria, 50, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+        await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ExcluirCategoria(id, CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal("Não é possível excluir uma categoria com lançamentos.", LerJson(resultado).GetProperty("erros")[0].GetString());
+        Assert.NotNull(await _categoriaRepositorio.ObterCategoriaPorId(id, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ExcluirCategoriaInexistente()
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ExcluirCategoria(Guid.NewGuid(), CancellationToken.None));
 
         Assert.Equal(404, resultado.StatusCode);
     }
