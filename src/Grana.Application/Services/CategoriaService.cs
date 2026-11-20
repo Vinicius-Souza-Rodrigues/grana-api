@@ -6,7 +6,7 @@ using Grana.Domain.Notificacoes;
 
 namespace Application.Services;
 
-public sealed class CategoriaService(ICategoriaRepository categoriaRepository) : ICategoriaService
+public sealed class CategoriaService(ICategoriaRepository categoriaRepository, ILancamentoRepository lancamentoRepository) : ICategoriaService
 {
     public async Task<Categoria> CriarCategoria(CategoriaCriarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
     {
@@ -74,5 +74,25 @@ public sealed class CategoriaService(ICategoriaRepository categoriaRepository) :
             return null;
 
         return categoria;
+    }
+
+    public async Task ExcluirCategoria(Guid idCategoria, Notificacao notificacao, CancellationToken cancellationToken)
+    {
+        var categoria = await categoriaRepository.ObterCategoriaPorId(idCategoria, cancellationToken);
+
+        if (categoria is null)
+        {
+            notificacao.AdicionarNaoEncontrado("Categoria não encontrada.");
+            return;
+        }
+
+        var possuiLancamentos = await lancamentoRepository.ExisteLancamentoComCategoria(categoria.Id, cancellationToken);
+
+        categoria.ValidarExclusao(possuiLancamentos, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        await categoriaRepository.RemoverCategoria(categoria, cancellationToken);
     }
 }

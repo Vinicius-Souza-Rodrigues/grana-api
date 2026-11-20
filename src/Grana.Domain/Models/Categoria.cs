@@ -75,6 +75,12 @@ public sealed class Categoria
         OrcamentoMensal = orcamentoMensal;
     }
 
+    public void ValidarExclusao(bool possuiLancamentos, Notificacao notificacao)
+    {
+        if (possuiLancamentos)
+            notificacao.Adicionar("Não é possível excluir uma categoria com lançamentos.");
+    }
+
     private static void ValidarNome(string nome, Notificacao notificacao)
     {
         if (string.IsNullOrWhiteSpace(nome))

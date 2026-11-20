@@ -50,6 +50,16 @@ public sealed class CategoriaController(ICategoriaService categoriaService) : Ap
         return Responder(notificacao, 200, "Categoria atualizada com sucesso.", MontarDetalhe(categoria));
     }
 
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> ExcluirCategoria(Guid id, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        await categoriaService.ExcluirCategoria(id, notificacao, cancellationToken);
+
+        return ResponderSemConteudo(notificacao);
+    }
+
     private static object MontarDetalhe(Categoria categoria)
     {
         if (categoria is null)

@@ -41,4 +41,11 @@ public sealed class CategoriaRepository : ICategoriaRepository
 
         return Task.FromResult(categorias);
     }
+
+    public Task RemoverCategoria(Categoria categoria, CancellationToken cancellationToken)
+    {
+        _categorias.Remove(categoria);
+
+        return Task.CompletedTask;
+    }
 }

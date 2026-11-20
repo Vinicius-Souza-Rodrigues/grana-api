@@ -50,4 +50,12 @@ public abstract class ApiController : ControllerBase
 
         return CreatedAtAction(nomeAction, rota, new { codigo = 201, mensagem, dados, avisos});
     }
+
+    protected IActionResult ResponderSemConteudo(Notificacao notificacao)
+    {
+        if (notificacao.TemNotificacoes)
+            return Responder(notificacao, 204, null);
+
+        return NoContent();
+    }
 }
