@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Api.Controllers;
 using Application.Dtos;
 using Application.Services;
+using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
 using Infraestructure.Repositories;
@@ -237,7 +238,7 @@ public sealed class CategoriaControllerTest
     {
         var id = await CriarCategoria("Alimentação", "Despesa", null);
         var categoria = await _categoriaRepositorio.ObterCategoriaPorId(id, CancellationToken.None);
-        var lancamento = Lancamento.CriacaoLancamento(Guid.NewGuid(), categoria, 50, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao()), categoria, 50, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
         await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.ExcluirCategoria(id, CancellationToken.None));

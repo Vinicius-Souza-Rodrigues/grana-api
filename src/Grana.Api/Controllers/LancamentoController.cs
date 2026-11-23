@@ -1,6 +1,7 @@
 using Application.Dtos;
 using Application.Interfaces;
 using Domain.Models;
+using Domain.Shared.Paginacao;
 using Grana.Api.Controllers;
 using Grana.Domain.Notificacoes;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers;
 
 [Route("api/lancamentos")]
-public sealed class LancamentoController(ILancamentoService lancamentoService, IContaService contaService) : ApiController
+public sealed class LancamentoController(ILancamentoService lancamentoService) : ApiController
 {
     [HttpPost]
     public async Task<IActionResult> CriarLancamento(LancamentoCriarDto lancamentoCriar, CancellationToken cancellationToken)
@@ -17,12 +18,17 @@ public sealed class LancamentoController(ILancamentoService lancamentoService, I
 
         var lancamento = await lancamentoService.CriarLancamento(lancamentoCriar, notificacao, cancellationToken);
 
-        if (notificacao.TemNotificacoes)
-            return Responder(notificacao, 201, null);
+        return ResponderCriado(notificacao, nameof(ObterLancamentoPorId), new { id = lancamento?.Id }, "Lançamento criado com sucesso.", MontarCriado(lancamento));
+    }
 
-        var conta = await contaService.ObterContaPorId(lancamento.IdConta, notificacao, cancellationToken);
+    [HttpGet]
+    public async Task<IActionResult> ListarLancamentos([FromQuery] LancamentoListarDto lancamentoListar, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
 
-        return ResponderCriado(notificacao, nameof(ObterLancamentoPorId), new { id = lancamento.Id }, "Lançamento criado com sucesso.", new { lancamento = MontarDetalhe(lancamento), saldoConta = conta.Saldo });
+        var paginacao = await lancamentoService.ListarLancamentos(lancamentoListar, notificacao, cancellationToken);
+
+        return Responder(notificacao, 200, "Lançamentos encontrados.", MontarPaginacao(paginacao));
     }
 
     [HttpGet("{id:guid}")]
@@ -33,6 +39,47 @@ public sealed class LancamentoController(ILancamentoService lancamentoService, I
         var lancamento = await lancamentoService.ObterLancamentoPorId(id, notificacao, cancellationToken);
 
         return Responder(notificacao, 200, "Lançamento encontrado.", MontarDetalhe(lancamento));
+    }
+
+    private static object MontarCriado(Lancamento lancamento)
+    {
+        if (lancamento is null)
+            return null;
+
+        return new
+        {
+            lancamento = MontarDetalhe(lancamento),
+            saldoConta = lancamento.Conta.Saldo
+        };
+    }
+
+    private static object MontarPaginacao(PaginacaoPrincipal<Lancamento> paginacao)
+    {
+        if (paginacao is null)
+            return null;
+
+        return new
+        {
+            itens = paginacao.Itens.Select(MontarItem).ToList(),
+            pagina = paginacao.Pagina,
+            tamanhoPagina = paginacao.TamanhoPagina,
+            totalItens = paginacao.TotalItens,
+            totalPaginas = paginacao.TotalPaginas
+        };
+    }
+
+    private static object MontarItem(Lancamento lancamento)
+    {
+        return new
+        {
+            id = lancamento.Id,
+            data = lancamento.Data,
+            descricao = lancamento.Descricao,
+            valor = lancamento.Valor,
+            tipo = lancamento.TipoLancamento,
+            conta = new { id = lancamento.Conta.Id, nome = lancamento.Conta.Nome },
+            categoria = new { id = lancamento.Categoria.Id, nome = lancamento.Categoria.Nome }
+        };
     }
 
     private static object MontarDetalhe(Lancamento lancamento)

@@ -1,6 +1,7 @@
 using Application.Interfaces;
 using Domain.Enums;
 using Domain.Models;
+using Domain.Shared.Paginacao;
 
 namespace Infraestructure.Repositories;
 
@@ -20,6 +21,30 @@ public sealed class LancamentoRepository : ILancamentoRepository
         var lancamento = _lancamentos.Find(l => l.Id.Equals(idLancamento));
 
         return Task.FromResult(lancamento);
+    }
+
+    public Task ListarLancamentos(FiltroLancamento filtro, PaginacaoPrincipal<Lancamento> paginacao, CancellationToken cancellationToken)
+    {
+        var filtrados = _lancamentos
+            .Where(l =>
+                (filtro.IdConta is null || l.IdConta == filtro.IdConta) &&
+                (filtro.IdCategoria is null || l.IdCategoria == filtro.IdCategoria) &&
+                (filtro.TipoLancamento is null || l.TipoLancamento == filtro.TipoLancamento) &&
+                (filtro.DataInicio is null || l.Data >= filtro.DataInicio) &&
+                (filtro.DataFim is null || l.Data <= filtro.DataFim) &&
+                (filtro.Busca is null || (l.Descricao is not null && l.Descricao.Contains(filtro.Busca, StringComparison.OrdinalIgnoreCase))))
+            .ToList();
+
+        IReadOnlyList<Lancamento> itens = filtrados
+            .OrderByDescending(l => l.Data)
+            .ThenByDescending(l => l.CriadoEm)
+            .Skip((paginacao.Pagina - 1) * paginacao.TamanhoPagina)
+            .Take(paginacao.TamanhoPagina)
+            .ToList();
+
+        paginacao.PreencherPaginacao(itens, filtrados.Count);
+
+        return Task.CompletedTask;
     }
 
     public Task<bool> ExisteLancamentoComCategoria(Guid idCategoria, CancellationToken cancellationToken)
