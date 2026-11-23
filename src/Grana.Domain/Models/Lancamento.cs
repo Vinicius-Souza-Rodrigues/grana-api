@@ -5,11 +5,13 @@ namespace Domain.Models;
 
 public sealed class Lancamento
 {
-    private Lancamento(Guid idConta, Categoria categoria, decimal valor, DateOnly data, string descricao)
+    private Lancamento(Conta conta, Categoria categoria, decimal valor, DateOnly data, string descricao)
     {
         Id = Guid.NewGuid();
-        IdConta = idConta;
+        IdConta = conta.Id;
+        Conta = conta;
         IdCategoria = categoria.Id;
+        Categoria = categoria;
         TipoLancamento = categoria.TipoCategoria;
         Valor = valor;
         Data = data;
@@ -19,7 +21,9 @@ public sealed class Lancamento
 
     public Guid Id { get; private set; }
     public Guid IdConta { get; private set; }
+    public Conta Conta { get; private set; }
     public Guid IdCategoria { get; private set; }
+    public Categoria Categoria { get; private set; }
     public TipoCategoriaEnum TipoLancamento { get; private set; }
     public decimal Valor { get; private set; }
     public DateOnly Data { get; private set; }
@@ -28,14 +32,14 @@ public sealed class Lancamento
 
     public const int TamanhoMaximoDescricao = 100;
 
-    public static Lancamento CriacaoLancamento(Guid idConta, Categoria categoria, decimal valor, DateOnly data, string descricao, Notificacao notificacao)
+    public static Lancamento CriacaoLancamento(Conta conta, Categoria categoria, decimal valor, DateOnly data, string descricao, Notificacao notificacao)
     {
         descricao = descricao?.Trim();
 
         if (string.IsNullOrEmpty(descricao))
             descricao = null;
 
-        if (idConta == Guid.Empty)
+        if (conta is null)
             notificacao.Adicionar("A conta do lançamento é obrigatória.");
 
         if (categoria is null)
@@ -56,7 +60,7 @@ public sealed class Lancamento
         if (notificacao.TemNotificacoes)
             return null;
 
-        return new Lancamento(idConta, categoria, valor, data, descricao);
+        return new Lancamento(conta, categoria, valor, data, descricao);
     }
 
     public void AlterarCategoria(Categoria categoria, Notificacao notificacao)
@@ -71,5 +75,6 @@ public sealed class Lancamento
             return;
 
         IdCategoria = categoria.Id;
+        Categoria = categoria;
     }
 }

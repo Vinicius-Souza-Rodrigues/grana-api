@@ -163,7 +163,7 @@ public sealed class ContaTest
     {
         var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao());
         var receita = Categoria.CriacaoCategoria("Salário", TipoCategoriaEnum.Receita, null, new Notificacao());
-        var lancamento = Lancamento.CriacaoLancamento(conta.Id, receita, 50m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(conta, receita, 50m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
 
         conta.AplicarLancamento(lancamento, _notificacao);
 
@@ -176,7 +176,7 @@ public sealed class ContaTest
     {
         var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao());
         var despesa = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
-        var lancamento = Lancamento.CriacaoLancamento(conta.Id, despesa, 30m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(conta, despesa, 30m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
 
         conta.AplicarLancamento(lancamento, _notificacao);
 
@@ -189,7 +189,7 @@ public sealed class ContaTest
     {
         var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao());
         var despesa = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
-        var lancamento = Lancamento.CriacaoLancamento(conta.Id, despesa, 100.01m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(conta, despesa, 100.01m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
 
         conta.AplicarLancamento(lancamento, _notificacao);
 

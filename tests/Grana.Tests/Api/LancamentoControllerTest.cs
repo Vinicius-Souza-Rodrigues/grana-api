@@ -25,9 +25,7 @@ public sealed class LancamentoControllerTest
 
     public LancamentoControllerTest()
     {
-        _controller = new LancamentoController(
-            new LancamentoService(_lancamentoRepositorio, _contaRepositorio, _categoriaRepositorio),
-            new ContaService(_contaRepositorio));
+        _controller = new LancamentoController(new LancamentoService(_lancamentoRepositorio, _contaRepositorio, _categoriaRepositorio));
     }
 
     private static DateOnly Hoje => DateOnly.FromDateTime(DateTime.UtcNow);
@@ -155,17 +153,16 @@ public sealed class LancamentoControllerTest
     [Fact]
     public async Task ObterLancamentoExistente()
     {
-        var idConta = Guid.NewGuid();
-        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
-        var lancamento = Lancamento.CriacaoLancamento(idConta, categoria, 150.50m, Hoje, "Compra do mês", new Notificacao());
-        await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
+        var conta = await CriarConta(100m);
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var lancamento = await AdicionarLancamento(conta, categoria, 150.50m, Hoje, "Compra do mês");
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.ObterLancamentoPorId(lancamento.Id, CancellationToken.None));
 
         var dados = LerJson(resultado).GetProperty("dados");
         Assert.Equal(200, resultado.StatusCode);
         Assert.Equal(lancamento.Id, dados.GetProperty("id").GetGuid());
-        Assert.Equal(idConta, dados.GetProperty("contaId").GetGuid());
+        Assert.Equal(conta.Id, dados.GetProperty("contaId").GetGuid());
         Assert.Equal(categoria.Id, dados.GetProperty("categoriaId").GetGuid());
         Assert.Equal(150.50m, dados.GetProperty("valor").GetDecimal());
         Assert.Equal("Compra do mês", dados.GetProperty("descricao").GetString());
@@ -180,9 +177,148 @@ public sealed class LancamentoControllerTest
         Assert.Equal("Lançamento não encontrado.", LerJson(resultado).GetProperty("erros")[0].GetString());
     }
 
-    private async Task<Conta> CriarConta(decimal saldo)
+    [Fact]
+    public async Task ListarLancamentosTerceiraPaginaCom57Lancamentos()
     {
-        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, saldo, new Notificacao());
+        var conta = await CriarConta(100m);
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+
+        for (var i = 0; i < 57; i++)
+            await AdicionarLancamento(conta, categoria, 10m, Hoje, null);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(Filtro(pagina: 3, tamanhoPagina: 20), CancellationToken.None));
+
+        var dados = LerJson(resultado).GetProperty("dados");
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal(17, dados.GetProperty("itens").GetArrayLength());
+        Assert.Equal(3, dados.GetProperty("pagina").GetInt32());
+        Assert.Equal(20, dados.GetProperty("tamanhoPagina").GetInt32());
+        Assert.Equal(57, dados.GetProperty("totalItens").GetInt32());
+        Assert.Equal(3, dados.GetProperty("totalPaginas").GetInt32());
+    }
+
+    [Fact]
+    public async Task ListarLancamentosComDataInicioMaiorQueDataFim()
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(Filtro(dataInicio: Hoje, dataFim: Hoje.AddDays(-1)), CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal("A data de início não pode ser maior que a data de fim.", LerJson(resultado).GetProperty("erros")[0].GetString());
+    }
+
+    [Fact]
+    public async Task ListarLancamentosComTamanhoPagina500()
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(Filtro(tamanhoPagina: 500), CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task ListarLancamentosComTipoInvalido()
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(Filtro(tipo: "Investimento"), CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task ListarLancamentosComBuscaSemDiferenciarMaiusculas()
+    {
+        var conta = await CriarConta(100m);
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        await AdicionarLancamento(conta, categoria, 10m, Hoje, "Supermercado");
+        await AdicionarLancamento(conta, categoria, 10m, Hoje, "Padaria");
+        await AdicionarLancamento(conta, categoria, 10m, Hoje, null);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(Filtro(busca: "mercado"), CancellationToken.None));
+
+        var itens = LerJson(resultado).GetProperty("dados").GetProperty("itens");
+        Assert.Equal(1, itens.GetArrayLength());
+        Assert.Equal("Supermercado", itens[0].GetProperty("descricao").GetString());
+    }
+
+    [Fact]
+    public async Task ListarLancamentosOrdenadosPorDataDecrescente()
+    {
+        var conta = await CriarConta(100m);
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        await AdicionarLancamento(conta, categoria, 10m, Hoje.AddDays(-2), "Antigo");
+        await AdicionarLancamento(conta, categoria, 10m, Hoje, "Recente");
+        await AdicionarLancamento(conta, categoria, 10m, Hoje.AddDays(-1), "Meio");
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(Filtro(), CancellationToken.None));
+
+        var itens = LerJson(resultado).GetProperty("dados").GetProperty("itens");
+        Assert.Equal("Recente", itens[0].GetProperty("descricao").GetString());
+        Assert.Equal("Meio", itens[1].GetProperty("descricao").GetString());
+        Assert.Equal("Antigo", itens[2].GetProperty("descricao").GetString());
+    }
+
+    [Fact]
+    public async Task ListarLancamentosFiltrandoPorContaTipoEPeriodo()
+    {
+        var nubank = await CriarConta(100m);
+        var inter = await CriarConta(100m, "Inter");
+        var mercado = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var salario = await CriarCategoria("Salário", TipoCategoriaEnum.Receita, null);
+        await AdicionarLancamento(nubank, mercado, 10m, Hoje.AddDays(-5), "Fora do período");
+        await AdicionarLancamento(nubank, mercado, 20m, Hoje.AddDays(-2), "Esperado");
+        await AdicionarLancamento(nubank, salario, 30m, Hoje.AddDays(-2), "Outro tipo");
+        await AdicionarLancamento(inter, mercado, 40m, Hoje.AddDays(-2), "Outra conta");
+
+        var filtro = Filtro(contaId: nubank.Id, tipo: "despesa", dataInicio: Hoje.AddDays(-3), dataFim: Hoje.AddDays(-2));
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(filtro, CancellationToken.None));
+
+        var itens = LerJson(resultado).GetProperty("dados").GetProperty("itens");
+        Assert.Equal(1, itens.GetArrayLength());
+        Assert.Equal("Esperado", itens[0].GetProperty("descricao").GetString());
+        Assert.Equal("Nubank", itens[0].GetProperty("conta").GetProperty("nome").GetString());
+        Assert.Equal(mercado.Id, itens[0].GetProperty("categoria").GetProperty("id").GetGuid());
+        Assert.Equal("Mercado", itens[0].GetProperty("categoria").GetProperty("nome").GetString());
+    }
+
+    [Fact]
+    public async Task ListarLancamentosFiltrandoPorCategoria()
+    {
+        var conta = await CriarConta(100m);
+        var mercado = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var transporte = await CriarCategoria("Transporte", TipoCategoriaEnum.Despesa, null);
+        await AdicionarLancamento(conta, mercado, 10m, Hoje, "Compra");
+        await AdicionarLancamento(conta, transporte, 10m, Hoje, "Uber");
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(Filtro(categoriaId: transporte.Id), CancellationToken.None));
+
+        var itens = LerJson(resultado).GetProperty("dados").GetProperty("itens");
+        Assert.Equal(1, itens.GetArrayLength());
+        Assert.Equal("Uber", itens[0].GetProperty("descricao").GetString());
+    }
+
+    [Fact]
+    public async Task ListarLancamentosSemParametrosUsaPaginacaoPadrao()
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ListarLancamentos(Filtro(), CancellationToken.None));
+
+        var dados = LerJson(resultado).GetProperty("dados");
+        Assert.Equal(1, dados.GetProperty("pagina").GetInt32());
+        Assert.Equal(20, dados.GetProperty("tamanhoPagina").GetInt32());
+        Assert.Equal(0, dados.GetProperty("itens").GetArrayLength());
+    }
+
+    private static LancamentoListarDto Filtro(Guid? contaId = null, Guid? categoriaId = null, string tipo = null, DateOnly? dataInicio = null, DateOnly? dataFim = null, string busca = null, int? pagina = null, int? tamanhoPagina = null)
+        => new(contaId, categoriaId, tipo, dataInicio, dataFim, busca, pagina, tamanhoPagina);
+
+    private async Task<Lancamento> AdicionarLancamento(Conta conta, Categoria categoria, decimal valor, DateOnly data, string descricao)
+    {
+        var lancamento = Lancamento.CriacaoLancamento(conta, categoria, valor, data, descricao, new Notificacao());
+        await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
+
+        return lancamento;
+    }
+
+    private async Task<Conta> CriarConta(decimal saldo, string nome = "Nubank")
+    {
+        var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, saldo, new Notificacao());
         await _contaRepositorio.AdicionarConta(conta, CancellationToken.None);
 
         return conta;

@@ -1,4 +1,5 @@
 using Domain.Models;
+using Domain.Shared.Paginacao;
 
 namespace Application.Interfaces;
 
@@ -7,6 +8,8 @@ public interface ILancamentoRepository
     Task AdicionarLancamento(Lancamento lancamento, CancellationToken cancellationToken);
 
     Task<Lancamento> ObterLancamentoPorId(Guid idLancamento, CancellationToken cancellationToken);
+
+    Task ListarLancamentos(FiltroLancamento filtro, PaginacaoPrincipal<Lancamento> paginacao, CancellationToken cancellationToken);
 
     Task<bool> ExisteLancamentoComCategoria(Guid idCategoria, CancellationToken cancellationToken);
 
