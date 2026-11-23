@@ -82,3 +82,16 @@ DELETE {{Grana.Api_HostAddress}}/api/categorias/00000000-0000-0000-0000-00000000
 GET {{Grana.Api_HostAddress}}/api/lancamentos/00000000-0000-0000-0000-000000000000
 
 ###
+
+POST {{Grana.Api_HostAddress}}/api/lancamentos
+Content-Type: application/json
+
+{
+  "contaId": "00000000-0000-0000-0000-000000000000",
+  "categoriaId": "00000000-0000-0000-0000-000000000000",
+  "valor": 150.00,
+  "data": "2026-11-23",
+  "descricao": "Compra do mês"
+}
+
+###

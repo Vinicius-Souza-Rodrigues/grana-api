@@ -77,8 +77,7 @@ public sealed class Conta
         if (valorCredito <= 0)
             notificacao.Adicionar("O valor deve ser maior que zero");
 
-        if (StatusAtividadeConta == StatusAtividadeContaEnum.Inativo)
-            notificacao.Adicionar("O status de atividade da conta não pode ser inativo");
+        ValidarContaAtiva(notificacao);
 
          if (valorCredito != decimal.Round(valorCredito, 2))
             notificacao.Adicionar("O saldo possui mais que duas casas decimais");
@@ -96,8 +95,7 @@ public sealed class Conta
         if (valorDebito <= 0)
             notificacao.Adicionar("O valor deve ser maior que zero");
 
-        if (StatusAtividadeConta == StatusAtividadeContaEnum.Inativo)
-            notificacao.Adicionar("O status de atividade da conta não pode ser inativo");
+        ValidarContaAtiva(notificacao);
 
         if (SaldoTemporario < 0)
             notificacao.Adicionar("Saldo insuficiente.");
@@ -109,6 +107,28 @@ public sealed class Conta
             return;
 
         Saldo -= valorDebito;
+    }
+
+    public void ValidarContaAtiva(Notificacao notificacao)
+    {
+        if (StatusAtividadeConta == StatusAtividadeContaEnum.Inativo)
+            notificacao.Adicionar("O status de atividade da conta não pode ser inativo");
+    }
+
+    public void AplicarLancamento(Lancamento lancamento, Notificacao notificacao)
+    {
+        switch (lancamento.TipoLancamento)
+        {
+            case TipoCategoriaEnum.Receita:
+                Creditar(lancamento.Valor, notificacao);
+                break;
+            case TipoCategoriaEnum.Despesa:
+                Debitar(lancamento.Valor, notificacao);
+                break;
+            default:
+                notificacao.Adicionar("O tipo do lançamento é inválido.");
+                break;
+        }
     }
 
     public void Desativar(Notificacao notificacao)

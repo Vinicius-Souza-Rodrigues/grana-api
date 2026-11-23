@@ -157,4 +157,54 @@ public sealed class ContaTest
         Assert.True(_notificacao.TemNotificacoes);
         Assert.Equal("Nubank", conta.Nome);
     }
+
+    [Fact]
+    public void AplicarLancamentoDeReceita()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao());
+        var receita = Categoria.CriacaoCategoria("Salário", TipoCategoriaEnum.Receita, null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(conta.Id, receita, 50m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+
+        conta.AplicarLancamento(lancamento, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(150m, conta.Saldo);
+    }
+
+    [Fact]
+    public void AplicarLancamentoDeDespesa()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao());
+        var despesa = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(conta.Id, despesa, 30m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+
+        conta.AplicarLancamento(lancamento, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(70m, conta.Saldo);
+    }
+
+    [Fact]
+    public void AplicarLancamentoDeDespesaMaiorQueOSaldo()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao());
+        var despesa = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(conta.Id, despesa, 100.01m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+
+        conta.AplicarLancamento(lancamento, _notificacao);
+
+        Assert.Equal(["Saldo insuficiente."], _notificacao.Notificacoes);
+        Assert.Equal(100m, conta.Saldo);
+    }
+
+    [Fact]
+    public void ValidarContaAtivaComContaInativa()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 0m, new Notificacao());
+        conta.Desativar(new Notificacao());
+
+        conta.ValidarContaAtiva(_notificacao);
+
+        Assert.True(_notificacao.TemNotificacoes);
+    }
 }
