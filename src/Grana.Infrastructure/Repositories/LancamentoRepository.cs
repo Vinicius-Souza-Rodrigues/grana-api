@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Domain.Enums;
 using Domain.Models;
 
 namespace Infraestructure.Repositories;
@@ -26,5 +27,18 @@ public sealed class LancamentoRepository : ILancamentoRepository
         var existe = _lancamentos.Exists(l => l.IdCategoria == idCategoria);
 
         return Task.FromResult(existe);
+    }
+
+    public Task<decimal> SomarDespesasDaCategoriaNoMes(Guid idCategoria, int ano, int mes, CancellationToken cancellationToken)
+    {
+        var total = _lancamentos
+            .Where(l =>
+                l.IdCategoria == idCategoria &&
+                l.TipoLancamento == TipoCategoriaEnum.Despesa &&
+                l.Data.Year == ano &&
+                l.Data.Month == mes)
+            .Sum(l => l.Valor);
+
+        return Task.FromResult(total);
     }
 }

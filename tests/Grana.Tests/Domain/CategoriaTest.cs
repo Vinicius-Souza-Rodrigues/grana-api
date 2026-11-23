@@ -192,4 +192,56 @@ public sealed class CategoriaTest
         Assert.True(_notificacao.TemNotificacoes);
         Assert.Equal("Mercado", categoria.Nome);
     }
+
+    [Fact]
+    public void VerificarOrcamentoAbaixoDe80Porcento()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, 800m, new Notificacao());
+
+        categoria.VerificarOrcamento(640m, _notificacao);
+
+        Assert.False(_notificacao.TemAvisos);
+    }
+
+    [Fact]
+    public void VerificarOrcamentoAcimaDe80Porcento()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, 800m, new Notificacao());
+
+        categoria.VerificarOrcamento(700m, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(["A categoria Mercado passou de 80% do orçamento."], _notificacao.Avisos);
+    }
+
+    [Fact]
+    public void VerificarOrcamentoNoLimite()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, 800m, new Notificacao());
+
+        categoria.VerificarOrcamento(800m, _notificacao);
+
+        Assert.Equal(["A categoria Mercado passou de 80% do orçamento."], _notificacao.Avisos);
+    }
+
+    [Fact]
+    public void VerificarOrcamentoUltrapassado()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, 800m, new Notificacao());
+
+        categoria.VerificarOrcamento(850m, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(["O orçamento da categoria Mercado foi ultrapassado."], _notificacao.Avisos);
+    }
+
+    [Fact]
+    public void VerificarOrcamentoDeCategoriaSemOrcamento()
+    {
+        var categoria = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
+
+        categoria.VerificarOrcamento(10000m, _notificacao);
+
+        Assert.False(_notificacao.TemAvisos);
+    }
 }

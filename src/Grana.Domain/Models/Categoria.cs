@@ -20,6 +20,7 @@ public sealed class Categoria
 
     public const int TamanhoMinimoNome = 2;
     public const int TamanhoMaximoNome = 50;
+    public const decimal PercentualAlertaOrcamento = 0.8m;
 
     public static Categoria CriacaoCategoria(string nome, TipoCategoriaEnum tipoCategoria, decimal? orcamentoMensal, Notificacao notificacao)
     {
@@ -79,6 +80,18 @@ public sealed class Categoria
     {
         if (possuiLancamentos)
             notificacao.Adicionar("Não é possível excluir uma categoria com lançamentos.");
+    }
+
+    public void VerificarOrcamento(decimal totalDespesasNoMes, Notificacao notificacao)
+    {
+        if (OrcamentoMensal is null)
+            return;
+
+        if (totalDespesasNoMes > OrcamentoMensal.Value)
+            notificacao.AdicionarAviso($"O orçamento da categoria {Nome} foi ultrapassado.");
+
+        else if (totalDespesasNoMes > OrcamentoMensal.Value * PercentualAlertaOrcamento)
+            notificacao.AdicionarAviso($"A categoria {Nome} passou de 80% do orçamento.");
     }
 
     private static void ValidarNome(string nome, Notificacao notificacao)
