@@ -252,4 +252,30 @@ public sealed class ContaTest
         Assert.Equal(["O status de atividade da conta não pode ser inativo"], _notificacao.Notificacoes);
         Assert.Equal(0m, conta.Saldo);
     }
+
+    [Fact]
+    public void EstornarDespesa()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao());
+        var despesa = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(conta, despesa, 30m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+
+        conta.EstornarLancamento(lancamento, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(130m, conta.Saldo);
+    }
+
+    [Fact]
+    public void EstornarReceitaDeixandoSaldoNegativo()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 20m, new Notificacao());
+        var receita = Categoria.CriacaoCategoria("Salário", TipoCategoriaEnum.Receita, null, new Notificacao());
+        var lancamento = Lancamento.CriacaoLancamento(conta, receita, 500m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
+
+        conta.EstornarLancamento(lancamento, _notificacao);
+
+        Assert.Equal(["Saldo insuficiente."], _notificacao.Notificacoes);
+        Assert.Equal(20m, conta.Saldo);
+    }
 }

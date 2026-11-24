@@ -9,6 +9,8 @@ public interface ILancamentoRepository
 
     Task<Lancamento> ObterLancamentoPorId(Guid idLancamento, CancellationToken cancellationToken);
 
+    Task RemoverLancamento(Lancamento lancamento, CancellationToken cancellationToken);
+
     Task ListarLancamentos(FiltroLancamento filtro, PaginacaoPrincipal<Lancamento> paginacao, CancellationToken cancellationToken);
 
     Task<bool> ExisteLancamentoComCategoria(Guid idCategoria, CancellationToken cancellationToken);

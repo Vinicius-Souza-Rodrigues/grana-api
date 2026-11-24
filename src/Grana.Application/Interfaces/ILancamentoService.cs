@@ -14,4 +14,6 @@ public interface ILancamentoService
     Task<PaginacaoPrincipal<Lancamento>> ListarLancamentos(LancamentoListarDto dto, Notificacao notificacao, CancellationToken cancellationToken);
 
     Task<Lancamento> EditarLancamento(Guid idLancamento, LancamentoEditarDto dto, Notificacao notificacao, CancellationToken cancellationToken);
+
+    Task ExcluirLancamento(Guid idLancamento, Notificacao notificacao, CancellationToken cancellationToken);
 }

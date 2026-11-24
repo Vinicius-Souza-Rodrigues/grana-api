@@ -104,4 +104,22 @@ public sealed class LancamentoService(ILancamentoRepository lancamentoRepository
 
         return lancamento;
     }
+
+    public async Task ExcluirLancamento(Guid idLancamento, Notificacao notificacao, CancellationToken cancellationToken)
+    {
+        var lancamento = await lancamentoRepository.ObterLancamentoPorId(idLancamento, cancellationToken);
+
+        if (lancamento is null)
+        {
+            notificacao.AdicionarNaoEncontrado("Lançamento não encontrado.");
+            return;
+        }
+
+        lancamento.Conta.EstornarLancamento(lancamento, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        await lancamentoRepository.RemoverLancamento(lancamento, cancellationToken);
+    }
 }

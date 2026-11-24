@@ -159,6 +159,11 @@ public sealed class Conta
         Saldo = saldoNovo;
     }
 
+    public void EstornarLancamento(Lancamento lancamento, Notificacao notificacao)
+    {
+        SubstituirValorDeLancamento(lancamento.TipoLancamento, lancamento.Valor, 0, notificacao);
+    }
+
     public void Desativar(Notificacao notificacao)
     {
         if (StatusAtividadeConta == StatusAtividadeContaEnum.Inativo)
