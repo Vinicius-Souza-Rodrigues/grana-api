@@ -88,21 +88,18 @@ dotnet test
 ## Roadmap
 
 - [x] Estrutura em camadas, Notification e tratamento de erros
-- [ ] Contas, categorias, lançamentos e transferências
-- [ ] Orçamento, resumo mensal e extrato
-- [ ] Banco de dados com EF Core e PostgreSQL
-- [ ] Docker, documentação com Scalar e CI com GitHub Actions
-- [ ] Autenticação com JWT
+- [x] Contas, categorias, lançamentos e transferências
+- [x] Orçamento, resumo mensal e extrato
+- [x] Banco de dados com EF Core e PostgreSQL
+- [x] Docker, documentação com Scalar e CI com GitHub Actions
+- [x] Autenticação com JWT
 
 ---
 
 ## Sobre o desenvolvimento
 
-Fiz este projeto para mostrar como eu programo. Por isso, escrevi todo o código sozinho, sem usar Inteligência Artificial. A modelagem do domínio, a implementação das regras de negócio, a arquitetura e os testes são decisões minhas.
 
-O README também fui eu que escrevi. Usei IA só para revisar o texto: corrigir a ortografia, organizar o layout e melhorar algumas frases.
-
-Se quiser ver como eu trabalho usando IA, com Agentes e Skills, dá uma olhada no projeto [NOME-DO-PROJETO](https://github.com/Vinicius-Souza-Rodrigues/NOME-DO-PROJETO).
+Se quiser ver como eu trabalho usando IA, com Agentes e Skills, dá uma olhada no projeto 
 
 ---
 
