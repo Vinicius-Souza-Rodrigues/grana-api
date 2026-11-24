@@ -161,4 +161,57 @@ public sealed class LancamentoTest
         Assert.Equal(_despesa.Id, lancamento.IdCategoria);
         Assert.Equal(TipoCategoriaEnum.Despesa, lancamento.TipoLancamento);
     }
+
+    [Fact]
+    public void EditarLancamentoComDadosValidos()
+    {
+        var lancamento = Lancamento.CriacaoLancamento(_conta, _despesa, 10, Hoje, null, new Notificacao());
+        var transporte = Categoria.CriacaoCategoria("Transporte", TipoCategoriaEnum.Despesa, null, new Notificacao());
+
+        lancamento.Editar(transporte, 30m, Hoje.AddDays(-1), "  Uber  ", _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(transporte.Id, lancamento.IdCategoria);
+        Assert.Equal(transporte, lancamento.Categoria);
+        Assert.Equal(30m, lancamento.Valor);
+        Assert.Equal(Hoje.AddDays(-1), lancamento.Data);
+        Assert.Equal("Uber", lancamento.Descricao);
+        Assert.Equal(80m, _conta.Saldo);
+    }
+
+    [Fact]
+    public void EditarLancamentoComTresErros()
+    {
+        var lancamento = Lancamento.CriacaoLancamento(_conta, _despesa, 10, Hoje, "Mercado", new Notificacao());
+
+        lancamento.Editar(_receita, 0, Hoje.AddDays(1), "Mercado", _notificacao);
+
+        Assert.Equal(3, _notificacao.Notificacoes.Count);
+        Assert.Equal(10m, lancamento.Valor);
+        Assert.Equal(_despesa.Id, lancamento.IdCategoria);
+        Assert.Equal(100m, _conta.Saldo);
+    }
+
+    [Fact]
+    public void EditarLancamentoSemCategoria()
+    {
+        var lancamento = Lancamento.CriacaoLancamento(_conta, _despesa, 10, Hoje, null, new Notificacao());
+
+        lancamento.Editar(null, 10, Hoje, null, _notificacao);
+
+        Assert.Contains("A categoria do lançamento é obrigatória.", _notificacao.Notificacoes);
+    }
+
+    [Fact]
+    public void EditarDespesaComSaldoInsuficiente()
+    {
+        var lancamento = Lancamento.CriacaoLancamento(_conta, _despesa, 10, Hoje, null, new Notificacao());
+
+        lancamento.Editar(_despesa, 110.01m, Hoje, "Alterado", _notificacao);
+
+        Assert.Equal(["Saldo insuficiente."], _notificacao.Notificacoes);
+        Assert.Equal(10m, lancamento.Valor);
+        Assert.Null(lancamento.Descricao);
+        Assert.Equal(100m, _conta.Saldo);
+    }
 }

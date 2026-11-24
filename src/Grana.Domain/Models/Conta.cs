@@ -131,6 +131,34 @@ public sealed class Conta
         }
     }
 
+    public void SubstituirValorDeLancamento(TipoCategoriaEnum tipoLancamento, decimal valorAnterior, decimal valorNovo, Notificacao notificacao)
+    {
+        decimal saldoNovo;
+
+        switch (tipoLancamento)
+        {
+            case TipoCategoriaEnum.Receita:
+                saldoNovo = Saldo - valorAnterior + valorNovo;
+                break;
+            case TipoCategoriaEnum.Despesa:
+                saldoNovo = Saldo + valorAnterior - valorNovo;
+                break;
+            default:
+                notificacao.Adicionar("O tipo do lançamento é inválido.");
+                return;
+        }
+
+        ValidarContaAtiva(notificacao);
+
+        if (saldoNovo < SaldoMinimo)
+            notificacao.Adicionar("Saldo insuficiente.");
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        Saldo = saldoNovo;
+    }
+
     public void Desativar(Notificacao notificacao)
     {
         if (StatusAtividadeConta == StatusAtividadeContaEnum.Inativo)

@@ -34,10 +34,7 @@ public sealed class Lancamento
 
     public static Lancamento CriacaoLancamento(Conta conta, Categoria categoria, decimal valor, DateOnly data, string descricao, Notificacao notificacao)
     {
-        descricao = descricao?.Trim();
-
-        if (string.IsNullOrEmpty(descricao))
-            descricao = null;
+        descricao = NormalizarDescricao(descricao);
 
         if (conta is null)
             notificacao.Adicionar("A conta do lançamento é obrigatória.");
@@ -45,6 +42,69 @@ public sealed class Lancamento
         if (categoria is null)
             notificacao.Adicionar("A categoria do lançamento é obrigatória.");
 
+        ValidarDados(valor, data, descricao, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return null;
+
+        return new Lancamento(conta, categoria, valor, data, descricao);
+    }
+
+    public void Editar(Categoria categoria, decimal valor, DateOnly data, string descricao, Notificacao notificacao)
+    {
+        descricao = NormalizarDescricao(descricao);
+
+        ValidarNovaCategoria(categoria, notificacao);
+
+        ValidarDados(valor, data, descricao, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        Conta.SubstituirValorDeLancamento(TipoLancamento, Valor, valor, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        IdCategoria = categoria.Id;
+        Categoria = categoria;
+        Valor = valor;
+        Data = data;
+        Descricao = descricao;
+    }
+
+    public void AlterarCategoria(Categoria categoria, Notificacao notificacao)
+    {
+        ValidarNovaCategoria(categoria, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        IdCategoria = categoria.Id;
+        Categoria = categoria;
+    }
+
+    private void ValidarNovaCategoria(Categoria categoria, Notificacao notificacao)
+    {
+        if (categoria is null)
+            notificacao.Adicionar("A categoria do lançamento é obrigatória.");
+
+        else if (categoria.TipoCategoria != TipoLancamento)
+            notificacao.Adicionar("A nova categoria precisa ser do mesmo tipo do lançamento.");
+    }
+
+    private static string NormalizarDescricao(string descricao)
+    {
+        descricao = descricao?.Trim();
+
+        if (string.IsNullOrEmpty(descricao))
+            return null;
+
+        return descricao;
+    }
+
+    private static void ValidarDados(decimal valor, DateOnly data, string descricao, Notificacao notificacao)
+    {
         if (valor <= 0)
             notificacao.Adicionar("O valor deve ser maior que zero.");
 
@@ -56,25 +116,5 @@ public sealed class Lancamento
 
         if (descricao is not null && descricao.Length > TamanhoMaximoDescricao)
             notificacao.Adicionar("A descrição não pode ter mais que 100 caracteres.");
-
-        if (notificacao.TemNotificacoes)
-            return null;
-
-        return new Lancamento(conta, categoria, valor, data, descricao);
-    }
-
-    public void AlterarCategoria(Categoria categoria, Notificacao notificacao)
-    {
-        if (categoria is null)
-            notificacao.Adicionar("A categoria do lançamento é obrigatória.");
-
-        else if (categoria.TipoCategoria != TipoLancamento)
-            notificacao.Adicionar("A nova categoria precisa ser do mesmo tipo do lançamento.");
-
-        if (notificacao.TemNotificacoes)
-            return;
-
-        IdCategoria = categoria.Id;
-        Categoria = categoria;
     }
 }

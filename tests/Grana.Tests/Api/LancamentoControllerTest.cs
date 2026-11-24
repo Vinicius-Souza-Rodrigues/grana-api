@@ -305,6 +305,147 @@ public sealed class LancamentoControllerTest
         Assert.Equal(0, dados.GetProperty("itens").GetArrayLength());
     }
 
+    [Fact]
+    public async Task EditarDespesaAumentandoOValor()
+    {
+        var conta = await CriarConta(250m);
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var id = await CriarLancamentoPeloEndpoint(conta, categoria, 50m);
+        Assert.Equal(200m, conta.Saldo);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(categoria.Id, 80m, Hoje, "Compra maior"), CancellationToken.None));
+
+        var dados = LerJson(resultado).GetProperty("dados");
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal(170m, dados.GetProperty("saldoConta").GetDecimal());
+        Assert.Equal(80m, dados.GetProperty("lancamento").GetProperty("valor").GetDecimal());
+        Assert.Equal("Compra maior", dados.GetProperty("lancamento").GetProperty("descricao").GetString());
+        Assert.Equal(170m, conta.Saldo);
+    }
+
+    [Fact]
+    public async Task EditarDespesaDeixandoSaldoNegativo()
+    {
+        var conta = await CriarConta(60m);
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var id = await CriarLancamentoPeloEndpoint(conta, categoria, 50m);
+        Assert.Equal(10m, conta.Saldo);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(categoria.Id, 100m, Hoje, "Alterado"), CancellationToken.None));
+
+        var lancamento = await _lancamentoRepositorio.ObterLancamentoPorId(id, CancellationToken.None);
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal("Saldo insuficiente.", LerJson(resultado).GetProperty("erros")[0].GetString());
+        Assert.Equal(10m, conta.Saldo);
+        Assert.Equal(50m, lancamento.Valor);
+        Assert.Null(lancamento.Descricao);
+    }
+
+    [Fact]
+    public async Task EditarDespesaParaCategoriaDeReceita()
+    {
+        var conta = await CriarConta(100m);
+        var mercado = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var salario = await CriarCategoria("Salário", TipoCategoriaEnum.Receita, null);
+        var id = await CriarLancamentoPeloEndpoint(conta, mercado, 50m);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(salario.Id, 50m, Hoje, null), CancellationToken.None));
+
+        var lancamento = await _lancamentoRepositorio.ObterLancamentoPorId(id, CancellationToken.None);
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal("A nova categoria precisa ser do mesmo tipo do lançamento.", LerJson(resultado).GetProperty("erros")[0].GetString());
+        Assert.Equal(mercado.Id, lancamento.IdCategoria);
+        Assert.Equal(50m, conta.Saldo);
+    }
+
+    [Fact]
+    public async Task EditarReceitaDiminuindoOValor()
+    {
+        var conta = await CriarConta(100m);
+        var categoria = await CriarCategoria("Salário", TipoCategoriaEnum.Receita, null);
+        var id = await CriarLancamentoPeloEndpoint(conta, categoria, 500m);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(categoria.Id, 300m, Hoje, null), CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal(400m, conta.Saldo);
+    }
+
+    [Fact]
+    public async Task EditarLancamentoTrocandoParaCategoriaDoMesmoTipo()
+    {
+        var conta = await CriarConta(100m);
+        var mercado = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var transporte = await CriarCategoria("Transporte", TipoCategoriaEnum.Despesa, null);
+        var id = await CriarLancamentoPeloEndpoint(conta, mercado, 50m);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(transporte.Id, 50m, Hoje, null), CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.Equal(transporte.Id, LerJson(resultado).GetProperty("dados").GetProperty("lancamento").GetProperty("categoriaId").GetGuid());
+        Assert.Equal(50m, conta.Saldo);
+    }
+
+    [Fact]
+    public async Task EditarLancamentoComContaDesativada()
+    {
+        var conta = await CriarConta(100m);
+        var categoria = await CriarCategoria("Salário", TipoCategoriaEnum.Receita, null);
+        var id = await CriarLancamentoPeloEndpoint(conta, categoria, 50m);
+        conta.Debitar(150m, new Notificacao());
+        conta.Desativar(new Notificacao());
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(categoria.Id, 80m, Hoje, null), CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal(0m, conta.Saldo);
+    }
+
+    [Fact]
+    public async Task EditarLancamentoComDadosInvalidos()
+    {
+        var conta = await CriarConta(100m);
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var id = await CriarLancamentoPeloEndpoint(conta, categoria, 50m);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(categoria.Id, 0m, Hoje.AddDays(1), null), CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal(2, LerJson(resultado).GetProperty("erros").GetArrayLength());
+        Assert.Equal(50m, conta.Saldo);
+    }
+
+    [Fact]
+    public async Task EditarLancamentoInexistente()
+    {
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(Guid.NewGuid(), new LancamentoEditarDto(categoria.Id, 10m, Hoje, null), CancellationToken.None));
+
+        Assert.Equal(404, resultado.StatusCode);
+        Assert.Equal("Lançamento não encontrado.", LerJson(resultado).GetProperty("erros")[0].GetString());
+    }
+
+    [Fact]
+    public async Task EditarLancamentoComCategoriaInexistente()
+    {
+        var conta = await CriarConta(100m);
+        var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
+        var id = await CriarLancamentoPeloEndpoint(conta, categoria, 50m);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(Guid.NewGuid(), 10m, Hoje, null), CancellationToken.None));
+
+        Assert.Equal(404, resultado.StatusCode);
+        Assert.Equal("Categoria não encontrada.", LerJson(resultado).GetProperty("erros")[0].GetString());
+    }
+
+    private async Task<Guid> CriarLancamentoPeloEndpoint(Conta conta, Categoria categoria, decimal valor)
+    {
+        var resultado = Assert.IsType<CreatedAtActionResult>(await _controller.CriarLancamento(new LancamentoCriarDto(conta.Id, categoria.Id, valor, Hoje, null), CancellationToken.None));
+
+        return (Guid)resultado.RouteValues["id"];
+    }
+
     private static LancamentoListarDto Filtro(Guid? contaId = null, Guid? categoriaId = null, string tipo = null, DateOnly? dataInicio = null, DateOnly? dataFim = null, string busca = null, int? pagina = null, int? tamanhoPagina = null)
         => new(contaId, categoriaId, tipo, dataInicio, dataFim, busca, pagina, tamanhoPagina);
 
