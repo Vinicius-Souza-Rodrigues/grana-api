@@ -207,4 +207,49 @@ public sealed class ContaTest
 
         Assert.True(_notificacao.TemNotificacoes);
     }
+
+    [Fact]
+    public void SubstituirValorDeDespesa()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 200m, new Notificacao());
+
+        conta.SubstituirValorDeLancamento(TipoCategoriaEnum.Despesa, 50m, 80m, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(170m, conta.Saldo);
+    }
+
+    [Fact]
+    public void SubstituirValorDeReceita()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 600m, new Notificacao());
+
+        conta.SubstituirValorDeLancamento(TipoCategoriaEnum.Receita, 500m, 300m, _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(400m, conta.Saldo);
+    }
+
+    [Fact]
+    public void SubstituirValorDeixandoSaldoNegativo()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 10m, new Notificacao());
+
+        conta.SubstituirValorDeLancamento(TipoCategoriaEnum.Despesa, 50m, 100m, _notificacao);
+
+        Assert.Equal(["Saldo insuficiente."], _notificacao.Notificacoes);
+        Assert.Equal(10m, conta.Saldo);
+    }
+
+    [Fact]
+    public void SubstituirValorEmContaInativa()
+    {
+        var conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 0m, new Notificacao());
+        conta.Desativar(new Notificacao());
+
+        conta.SubstituirValorDeLancamento(TipoCategoriaEnum.Receita, 50m, 80m, _notificacao);
+
+        Assert.Equal(["O status de atividade da conta não pode ser inativo"], _notificacao.Notificacoes);
+        Assert.Equal(0m, conta.Saldo);
+    }
 }

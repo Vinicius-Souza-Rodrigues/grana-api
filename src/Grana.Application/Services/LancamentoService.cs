@@ -78,4 +78,30 @@ public sealed class LancamentoService(ILancamentoRepository lancamentoRepository
 
         return paginacao;
     }
+
+    public async Task<Lancamento> EditarLancamento(Guid idLancamento, LancamentoEditarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
+    {
+        var lancamento = await lancamentoRepository.ObterLancamentoPorId(idLancamento, cancellationToken);
+
+        if (lancamento is null)
+        {
+            notificacao.AdicionarNaoEncontrado("Lançamento não encontrado.");
+            return null;
+        }
+
+        var categoria = await categoriaRepository.ObterCategoriaPorId(dto.categoriaId, cancellationToken);
+
+        if (categoria is null)
+        {
+            notificacao.AdicionarNaoEncontrado("Categoria não encontrada.");
+            return null;
+        }
+
+        lancamento.Editar(categoria, dto.valor, dto.data, dto.descricao, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return null;
+
+        return lancamento;
+    }
 }

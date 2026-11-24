@@ -18,7 +18,17 @@ public sealed class LancamentoController(ILancamentoService lancamentoService) :
 
         var lancamento = await lancamentoService.CriarLancamento(lancamentoCriar, notificacao, cancellationToken);
 
-        return ResponderCriado(notificacao, nameof(ObterLancamentoPorId), new { id = lancamento?.Id }, "Lançamento criado com sucesso.", MontarCriado(lancamento));
+        return ResponderCriado(notificacao, nameof(ObterLancamentoPorId), new { id = lancamento?.Id }, "Lançamento criado com sucesso.", MontarComSaldo(lancamento));
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> EditarLancamento(Guid id, LancamentoEditarDto lancamentoEditar, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        var lancamento = await lancamentoService.EditarLancamento(id, lancamentoEditar, notificacao, cancellationToken);
+
+        return Responder(notificacao, 200, "Lançamento atualizado com sucesso.", MontarComSaldo(lancamento));
     }
 
     [HttpGet]
@@ -41,7 +51,7 @@ public sealed class LancamentoController(ILancamentoService lancamentoService) :
         return Responder(notificacao, 200, "Lançamento encontrado.", MontarDetalhe(lancamento));
     }
 
-    private static object MontarCriado(Lancamento lancamento)
+    private static object MontarComSaldo(Lancamento lancamento)
     {
         if (lancamento is null)
             return null;
