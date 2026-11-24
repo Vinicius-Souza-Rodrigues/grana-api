@@ -119,3 +119,15 @@ Content-Type: application/json
 DELETE {{Grana.Api_HostAddress}}/api/lancamentos/00000000-0000-0000-0000-000000000000
 
 ###
+
+GET {{Grana.Api_HostAddress}}/api/transferencias
+
+###
+
+GET {{Grana.Api_HostAddress}}/api/transferencias?contaId=00000000-0000-0000-0000-000000000000&dataInicio=2026-11-01&dataFim=2026-11-30
+
+###
+
+GET {{Grana.Api_HostAddress}}/api/transferencias/00000000-0000-0000-0000-000000000000
+
+###
