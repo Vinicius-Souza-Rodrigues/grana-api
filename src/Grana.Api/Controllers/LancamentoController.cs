@@ -31,6 +31,16 @@ public sealed class LancamentoController(ILancamentoService lancamentoService) :
         return Responder(notificacao, 200, "Lançamento atualizado com sucesso.", MontarComSaldo(lancamento));
     }
 
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> ExcluirLancamento(Guid id, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        await lancamentoService.ExcluirLancamento(id, notificacao, cancellationToken);
+
+        return ResponderSemConteudo(notificacao);
+    }
+
     [HttpGet]
     public async Task<IActionResult> ListarLancamentos([FromQuery] LancamentoListarDto lancamentoListar, CancellationToken cancellationToken)
     {

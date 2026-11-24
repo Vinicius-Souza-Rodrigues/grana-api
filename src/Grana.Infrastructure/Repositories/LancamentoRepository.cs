@@ -23,6 +23,13 @@ public sealed class LancamentoRepository : ILancamentoRepository
         return Task.FromResult(lancamento);
     }
 
+    public Task RemoverLancamento(Lancamento lancamento, CancellationToken cancellationToken)
+    {
+        _lancamentos.Remove(lancamento);
+
+        return Task.CompletedTask;
+    }
+
     public Task ListarLancamentos(FiltroLancamento filtro, PaginacaoPrincipal<Lancamento> paginacao, CancellationToken cancellationToken)
     {
         var filtrados = _lancamentos
