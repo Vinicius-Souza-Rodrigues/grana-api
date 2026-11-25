@@ -156,3 +156,11 @@ GET {{Grana.Api_HostAddress}}/api/orcamentos
 GET {{Grana.Api_HostAddress}}/api/orcamentos?ano=2026&mes=11
 
 ###
+
+GET {{Grana.Api_HostAddress}}/api/resumo
+
+###
+
+GET {{Grana.Api_HostAddress}}/api/resumo?ano=2026&mes=11
+
+###
