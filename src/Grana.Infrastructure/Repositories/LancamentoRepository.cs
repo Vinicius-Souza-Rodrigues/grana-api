@@ -70,6 +70,15 @@ public sealed class LancamentoRepository : ILancamentoRepository
         return Task.FromResult(lancamentos);
     }
 
+    public Task<IReadOnlyList<Lancamento>> ListarLancamentosDaContaAte(Guid idConta, DateOnly dataFim, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Lancamento> lancamentos = _lancamentos
+            .Where(l => l.IdConta == idConta && l.Data <= dataFim)
+            .ToList();
+
+        return Task.FromResult(lancamentos);
+    }
+
     public Task<decimal> SomarDespesasDaCategoriaNoMes(Guid idCategoria, int ano, int mes, CancellationToken cancellationToken)
     {
         var total = _lancamentos
