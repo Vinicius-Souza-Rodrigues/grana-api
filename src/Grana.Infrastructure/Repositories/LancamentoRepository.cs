@@ -61,6 +61,15 @@ public sealed class LancamentoRepository : ILancamentoRepository
         return Task.FromResult(existe);
     }
 
+    public Task<IReadOnlyList<Lancamento>> ListarLancamentosDoMes(int ano, int mes, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Lancamento> lancamentos = _lancamentos
+            .Where(l => l.Data.Year == ano && l.Data.Month == mes)
+            .ToList();
+
+        return Task.FromResult(lancamentos);
+    }
+
     public Task<decimal> SomarDespesasDaCategoriaNoMes(Guid idCategoria, int ano, int mes, CancellationToken cancellationToken)
     {
         var total = _lancamentos

@@ -15,5 +15,7 @@ public interface ILancamentoRepository
 
     Task<bool> ExisteLancamentoComCategoria(Guid idCategoria, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Lancamento>> ListarLancamentosDoMes(int ano, int mes, CancellationToken cancellationToken);
+
     Task<decimal> SomarDespesasDaCategoriaNoMes(Guid idCategoria, int ano, int mes, CancellationToken cancellationToken);
 }
