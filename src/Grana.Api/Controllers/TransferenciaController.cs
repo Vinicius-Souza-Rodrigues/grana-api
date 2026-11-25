@@ -10,6 +10,16 @@ namespace Api.Controllers;
 [Route("api/transferencias")]
 public sealed class TransferenciaController(ITransferenciaService transferenciaService) : ApiController
 {
+    [HttpPost]
+    public async Task<IActionResult> CriarTransferencia(TransferenciaCriarDto transferenciaCriar, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        var transferencia = await transferenciaService.CriarTransferencia(transferenciaCriar, notificacao, cancellationToken);
+
+        return ResponderCriado(notificacao, nameof(ObterTransferenciaPorId), new { id = transferencia?.Id }, "Transferência realizada com sucesso.", MontarComSaldos(transferencia));
+    }
+
     [HttpGet]
     public async Task<IActionResult> ListarTransferencias([FromQuery] TransferenciaListarDto transferenciaListar, CancellationToken cancellationToken)
     {
@@ -28,6 +38,19 @@ public sealed class TransferenciaController(ITransferenciaService transferenciaS
         var transferencia = await transferenciaService.ObterTransferenciaPorId(id, notificacao, cancellationToken);
 
         return Responder(notificacao, 200, "Transferência encontrada.", MontarDetalhe(transferencia));
+    }
+
+    private static object MontarComSaldos(Transferencia transferencia)
+    {
+        if (transferencia is null)
+            return null;
+
+        return new
+        {
+            transferencia = MontarDetalhe(transferencia),
+            saldoContaOrigem = transferencia.ContaOrigem.Saldo,
+            saldoContaDestino = transferencia.ContaDestino.Saldo
+        };
     }
 
     private static object MontarItem(Transferencia transferencia)

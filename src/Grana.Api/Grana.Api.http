@@ -120,6 +120,19 @@ DELETE {{Grana.Api_HostAddress}}/api/lancamentos/00000000-0000-0000-0000-0000000
 
 ###
 
+POST {{Grana.Api_HostAddress}}/api/transferencias
+Content-Type: application/json
+
+{
+  "contaOrigemId": "00000000-0000-0000-0000-000000000000",
+  "contaDestinoId": "00000000-0000-0000-0000-000000000000",
+  "valor": 300.00,
+  "data": "2026-11-25",
+  "descricao": "Reserva de emergência"
+}
+
+###
+
 GET {{Grana.Api_HostAddress}}/api/transferencias
 
 ###

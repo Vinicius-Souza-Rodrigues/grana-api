@@ -19,6 +19,7 @@ public sealed class TransferenciaControllerTest
     };
 
     private readonly TransferenciaRepository _transferenciaRepositorio = new();
+    private readonly ContaRepository _contaRepositorio = new();
     private readonly TransferenciaController _controller;
     private readonly Conta _nubank = CriarConta("Nubank");
     private readonly Conta _inter = CriarConta("Inter");
@@ -26,7 +27,82 @@ public sealed class TransferenciaControllerTest
 
     public TransferenciaControllerTest()
     {
-        _controller = new TransferenciaController(new TransferenciaService(_transferenciaRepositorio));
+        _controller = new TransferenciaController(new TransferenciaService(_transferenciaRepositorio, _contaRepositorio));
+    }
+
+    [Fact]
+    public async Task CriarTransferenciaAtualizaOsDoisSaldos()
+    {
+        var origem = await AdicionarConta("Origem", 1500m);
+        var destino = await AdicionarConta("Destino", 500m);
+
+        var resultado = Assert.IsType<CreatedAtActionResult>(await _controller.CriarTransferencia(new TransferenciaCriarDto(origem.Id, destino.Id, 300m, Hoje, "Reserva"), CancellationToken.None));
+
+        var dados = JsonDocument.Parse(JsonSerializer.Serialize(resultado.Value, _opcoesJson)).RootElement.GetProperty("dados");
+        Assert.Equal(201, resultado.StatusCode);
+        Assert.Equal(nameof(TransferenciaController.ObterTransferenciaPorId), resultado.ActionName);
+        Assert.Equal(1200m, dados.GetProperty("saldoContaOrigem").GetDecimal());
+        Assert.Equal(800m, dados.GetProperty("saldoContaDestino").GetDecimal());
+        Assert.Equal(origem.Id, dados.GetProperty("transferencia").GetProperty("contaOrigem").GetProperty("id").GetGuid());
+        Assert.Equal(destino.Id, dados.GetProperty("transferencia").GetProperty("contaDestino").GetProperty("id").GetGuid());
+        Assert.Equal(1200m, origem.Saldo);
+        Assert.Equal(800m, destino.Saldo);
+    }
+
+    [Fact]
+    public async Task CriarTransferenciaGravaATransferencia()
+    {
+        var origem = await AdicionarConta("Origem", 1500m);
+        var destino = await AdicionarConta("Destino", 500m);
+
+        var resultado = Assert.IsType<CreatedAtActionResult>(await _controller.CriarTransferencia(new TransferenciaCriarDto(origem.Id, destino.Id, 300m, Hoje, null), CancellationToken.None));
+
+        var id = JsonDocument.Parse(JsonSerializer.Serialize(resultado.Value, _opcoesJson)).RootElement.GetProperty("dados").GetProperty("transferencia").GetProperty("id").GetGuid();
+        var obtida = Assert.IsType<ObjectResult>(await _controller.ObterTransferenciaPorId(id, CancellationToken.None));
+        Assert.Equal(200, obtida.StatusCode);
+    }
+
+    [Fact]
+    public async Task CriarTransferenciaComSaldoInsuficienteEDestinoDesativado()
+    {
+        var origem = await AdicionarConta("Origem", 100m);
+        var destino = await AdicionarConta("Destino", 0m);
+        destino.Desativar(new Notificacao());
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.CriarTransferencia(new TransferenciaCriarDto(origem.Id, destino.Id, 300m, Hoje, null), CancellationToken.None));
+
+        var erros = LerJson(resultado).GetProperty("erros").EnumerateArray().Select(e => e.GetString()).ToList();
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal(2, erros.Count);
+        Assert.Contains("Saldo insuficiente.", erros);
+        Assert.Contains("A conta de destino está desativada.", erros);
+        Assert.Equal(100m, origem.Saldo);
+        Assert.Equal(0m, destino.Saldo);
+        Assert.Empty(await _transferenciaRepositorio.ListarTransferencias(FiltroTransferencia.CriarFiltro(null, null, null, new Notificacao()), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task CriarTransferenciaComContaDeOrigemInexistente()
+    {
+        var destino = await AdicionarConta("Destino", 500m);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.CriarTransferencia(new TransferenciaCriarDto(Guid.NewGuid(), destino.Id, 300m, Hoje, null), CancellationToken.None));
+
+        Assert.Equal(404, resultado.StatusCode);
+        Assert.Equal("Conta de origem não encontrada.", LerJson(resultado).GetProperty("erros")[0].GetString());
+        Assert.Equal(500m, destino.Saldo);
+    }
+
+    [Fact]
+    public async Task CriarTransferenciaComContaDeDestinoInexistente()
+    {
+        var origem = await AdicionarConta("Origem", 1500m);
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.CriarTransferencia(new TransferenciaCriarDto(origem.Id, Guid.NewGuid(), 300m, Hoje, null), CancellationToken.None));
+
+        Assert.Equal(404, resultado.StatusCode);
+        Assert.Equal("Conta de destino não encontrada.", LerJson(resultado).GetProperty("erros")[0].GetString());
+        Assert.Equal(1500m, origem.Saldo);
     }
 
     private static DateOnly Hoje => DateOnly.FromDateTime(DateTime.UtcNow);
@@ -131,6 +207,14 @@ public sealed class TransferenciaControllerTest
 
     private static Conta CriarConta(string nome)
         => Conta.CriacaoConta(nome, TipoContaEnum.Corrente, 1000m, new Notificacao());
+
+    private async Task<Conta> AdicionarConta(string nome, decimal saldo)
+    {
+        var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, saldo, new Notificacao());
+        await _contaRepositorio.AdicionarConta(conta, CancellationToken.None);
+
+        return conta;
+    }
 
     private async Task<Transferencia> AdicionarTransferencia(Conta origem, Conta destino, decimal valor, DateOnly data, string descricao)
     {
