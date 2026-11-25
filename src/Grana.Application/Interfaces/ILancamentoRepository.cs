@@ -17,5 +17,7 @@ public interface ILancamentoRepository
 
     Task<IReadOnlyList<Lancamento>> ListarLancamentosDoMes(int ano, int mes, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<Lancamento>> ListarLancamentosDaContaAte(Guid idConta, DateOnly dataFim, CancellationToken cancellationToken);
+
     Task<decimal> SomarDespesasDaCategoriaNoMes(Guid idCategoria, int ano, int mes, CancellationToken cancellationToken);
 }

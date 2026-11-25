@@ -22,6 +22,7 @@ builder.Services.AddScoped<ITransferenciaService, TransferenciaService>();
 builder.Services.AddSingleton<ITransferenciaRepository, TransferenciaRepository>();
 builder.Services.AddScoped<IOrcamentoService, OrcamentoService>();
 builder.Services.AddScoped<IResumoService, ResumoService>();
+builder.Services.AddScoped<IExtratoService, ExtratoService>();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<TratadorDeExcecoes>();
