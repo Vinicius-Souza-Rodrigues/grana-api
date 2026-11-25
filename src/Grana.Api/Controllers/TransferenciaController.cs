@@ -40,6 +40,16 @@ public sealed class TransferenciaController(ITransferenciaService transferenciaS
         return Responder(notificacao, 200, "Transferência encontrada.", MontarDetalhe(transferencia));
     }
 
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> ExcluirTransferencia(Guid id, CancellationToken cancellationToken)
+    {
+        var notificacao = new Notificacao();
+
+        await transferenciaService.ExcluirTransferencia(id, notificacao, cancellationToken);
+
+        return ResponderSemConteudo(notificacao);
+    }
+
     private static object MontarComSaldos(Transferencia transferencia)
     {
         if (transferencia is null)

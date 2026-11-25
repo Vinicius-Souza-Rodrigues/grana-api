@@ -184,4 +184,66 @@ public sealed class TransferenciaTest
         Assert.Equal(20m, _origem.Saldo);
         Assert.Equal(50m, _destino.Saldo);
     }
+
+    [Fact]
+    public void EstornarTransferenciaDevolveOsSaldos()
+    {
+        var transferencia = CriarTransferenciaEfetivada(_origem, _destino, 40m);
+
+        transferencia.Estornar(_notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+        Assert.Equal(100m, _origem.Saldo);
+        Assert.Equal(50m, _destino.Saldo);
+    }
+
+    [Fact]
+    public void EstornarTransferenciaComDestinoQueJaGastouOValor()
+    {
+        var transferencia = CriarTransferenciaEfetivada(_origem, _destino, 40m);
+        _destino.Debitar(80m, new Notificacao());
+
+        transferencia.Estornar(_notificacao);
+
+        Assert.Equal(["Saldo insuficiente."], _notificacao.Notificacoes);
+        Assert.Equal(60m, _origem.Saldo);
+        Assert.Equal(10m, _destino.Saldo);
+    }
+
+    [Fact]
+    public void EstornarTransferenciaComOrigemDesativada()
+    {
+        var transferencia = CriarTransferenciaEfetivada(_origem, _destino, 100m);
+        _origem.Desativar(new Notificacao());
+
+        transferencia.Estornar(_notificacao);
+
+        Assert.Equal(["A conta de origem está desativada."], _notificacao.Notificacoes);
+        Assert.Equal(0m, _origem.Saldo);
+        Assert.Equal(150m, _destino.Saldo);
+    }
+
+    [Fact]
+    public void EstornarTransferenciaComDestinoDesativadoReuneOsErros()
+    {
+        var transferencia = CriarTransferenciaEfetivada(_origem, _destino, 40m);
+        _destino.Debitar(90m, new Notificacao());
+        _destino.Desativar(new Notificacao());
+
+        transferencia.Estornar(_notificacao);
+
+        Assert.Equal(2, _notificacao.Notificacoes.Count);
+        Assert.Contains("A conta de destino está desativada.", _notificacao.Notificacoes);
+        Assert.Contains("Saldo insuficiente.", _notificacao.Notificacoes);
+        Assert.Equal(60m, _origem.Saldo);
+        Assert.Equal(0m, _destino.Saldo);
+    }
+
+    private static Transferencia CriarTransferenciaEfetivada(Conta origem, Conta destino, decimal valor)
+    {
+        var transferencia = Transferencia.CriacaoTransferencia(origem, destino, valor, Hoje, null, new Notificacao());
+        transferencia.Efetivar(new Notificacao());
+
+        return transferencia;
+    }
 }

@@ -47,6 +47,24 @@ public sealed class TransferenciaService(ITransferenciaRepository transferenciaR
         return transferencia;
     }
 
+    public async Task ExcluirTransferencia(Guid idTransferencia, Notificacao notificacao, CancellationToken cancellationToken)
+    {
+        var transferencia = await transferenciaRepository.ObterTransferenciaPorId(idTransferencia, cancellationToken);
+
+        if (transferencia is null)
+        {
+            notificacao.AdicionarNaoEncontrado("Transferência não encontrada.");
+            return;
+        }
+
+        transferencia.Estornar(notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        await transferenciaRepository.RemoverTransferencia(transferencia, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<Transferencia>> ListarTransferencias(TransferenciaListarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
     {
         var filtro = FiltroTransferencia.CriarFiltro(dto.contaId, dto.dataInicio, dto.dataFim, notificacao);

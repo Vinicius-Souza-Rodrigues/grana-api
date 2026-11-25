@@ -10,5 +10,7 @@ public interface ITransferenciaService
 
     Task<Transferencia> ObterTransferenciaPorId(Guid idTransferencia, Notificacao notificacao, CancellationToken cancellationToken);
 
+    Task ExcluirTransferencia(Guid idTransferencia, Notificacao notificacao, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<Transferencia>> ListarTransferencias(TransferenciaListarDto dto, Notificacao notificacao, CancellationToken cancellationToken);
 }
