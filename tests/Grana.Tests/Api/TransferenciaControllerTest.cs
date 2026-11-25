@@ -82,6 +82,47 @@ public sealed class TransferenciaControllerTest
     }
 
     [Fact]
+    public async Task ExcluirTransferenciaDevolveOsSaldos()
+    {
+        var origem = await AdicionarConta("Origem", 1500m);
+        var destino = await AdicionarConta("Destino", 500m);
+        var id = await CriarTransferenciaPeloEndpoint(origem, destino, 300m);
+
+        var resultado = await _controller.ExcluirTransferencia(id, CancellationToken.None);
+
+        Assert.IsType<NoContentResult>(resultado);
+        Assert.Equal(1500m, origem.Saldo);
+        Assert.Equal(500m, destino.Saldo);
+        Assert.Equal(404, Assert.IsType<ObjectResult>(await _controller.ObterTransferenciaPorId(id, CancellationToken.None)).StatusCode);
+    }
+
+    [Fact]
+    public async Task ExcluirTransferenciaComDestinoQueJaGastouOValor()
+    {
+        var origem = await AdicionarConta("Origem", 1500m);
+        var destino = await AdicionarConta("Destino", 500m);
+        var id = await CriarTransferenciaPeloEndpoint(origem, destino, 300m);
+        destino.Debitar(700m, new Notificacao());
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ExcluirTransferencia(id, CancellationToken.None));
+
+        Assert.Equal(400, resultado.StatusCode);
+        Assert.Equal("Saldo insuficiente.", LerJson(resultado).GetProperty("erros")[0].GetString());
+        Assert.Equal(1200m, origem.Saldo);
+        Assert.Equal(100m, destino.Saldo);
+        Assert.Equal(200, Assert.IsType<ObjectResult>(await _controller.ObterTransferenciaPorId(id, CancellationToken.None)).StatusCode);
+    }
+
+    [Fact]
+    public async Task ExcluirTransferenciaInexistente()
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.ExcluirTransferencia(Guid.NewGuid(), CancellationToken.None));
+
+        Assert.Equal(404, resultado.StatusCode);
+        Assert.Equal("Transferência não encontrada.", LerJson(resultado).GetProperty("erros")[0].GetString());
+    }
+
+    [Fact]
     public async Task CriarTransferenciaComContaDeOrigemInexistente()
     {
         var destino = await AdicionarConta("Destino", 500m);
@@ -207,6 +248,13 @@ public sealed class TransferenciaControllerTest
 
     private static Conta CriarConta(string nome)
         => Conta.CriacaoConta(nome, TipoContaEnum.Corrente, 1000m, new Notificacao());
+
+    private async Task<Guid> CriarTransferenciaPeloEndpoint(Conta origem, Conta destino, decimal valor)
+    {
+        var resultado = Assert.IsType<CreatedAtActionResult>(await _controller.CriarTransferencia(new TransferenciaCriarDto(origem.Id, destino.Id, valor, Hoje, null), CancellationToken.None));
+
+        return JsonDocument.Parse(JsonSerializer.Serialize(resultado.Value, _opcoesJson)).RootElement.GetProperty("dados").GetProperty("transferencia").GetProperty("id").GetGuid();
+    }
 
     private async Task<Conta> AdicionarConta(string nome, decimal saldo)
     {

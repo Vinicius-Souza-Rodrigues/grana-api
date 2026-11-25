@@ -87,4 +87,26 @@ public sealed class Transferencia
 
         ContaDestino.Creditar(Valor, notificacao);
     }
+
+    public void Estornar(Notificacao notificacao)
+    {
+        if (ContaOrigem.StatusAtividadeConta == StatusAtividadeContaEnum.Inativo)
+            notificacao.Adicionar("A conta de origem está desativada.");
+
+        if (ContaDestino.StatusAtividadeConta == StatusAtividadeContaEnum.Inativo)
+            notificacao.Adicionar("A conta de destino está desativada.");
+
+        if (ContaDestino.Saldo < Valor)
+            notificacao.Adicionar("Saldo insuficiente.");
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        ContaDestino.Debitar(Valor, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return;
+
+        ContaOrigem.Creditar(Valor, notificacao);
+    }
 }

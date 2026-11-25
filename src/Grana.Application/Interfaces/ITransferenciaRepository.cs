@@ -8,5 +8,7 @@ public interface ITransferenciaRepository
 
     Task<Transferencia> ObterTransferenciaPorId(Guid idTransferencia, CancellationToken cancellationToken);
 
+    Task RemoverTransferencia(Transferencia transferencia, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<Transferencia>> ListarTransferencias(FiltroTransferencia filtro, CancellationToken cancellationToken);
 }

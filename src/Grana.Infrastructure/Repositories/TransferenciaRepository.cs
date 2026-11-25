@@ -21,6 +21,13 @@ public sealed class TransferenciaRepository : ITransferenciaRepository
         return Task.FromResult(transferencia);
     }
 
+    public Task RemoverTransferencia(Transferencia transferencia, CancellationToken cancellationToken)
+    {
+        _transferencias.Remove(transferencia);
+
+        return Task.CompletedTask;
+    }
+
     public Task<IReadOnlyList<Transferencia>> ListarTransferencias(FiltroTransferencia filtro, CancellationToken cancellationToken)
     {
         IReadOnlyList<Transferencia> transferencias = _transferencias
