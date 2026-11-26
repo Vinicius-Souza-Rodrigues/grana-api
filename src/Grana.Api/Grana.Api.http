@@ -1,178 +1,248 @@
 @Grana.Api_HostAddress = http://localhost:5180
 
-###
+@contaId = {{criarConta.response.body.$.dados.id}}
+@contaDestinoId = {{criarContaDestino.response.body.$.dados.id}}
+@contaVaziaId = {{criarContaVazia.response.body.$.dados.id}}
+@categoriaDespesaId = {{criarCategoriaDespesa.response.body.$.dados.id}}
+@categoriaReceitaId = {{criarCategoriaReceita.response.body.$.dados.id}}
+@categoriaSemUsoId = {{criarCategoriaSemUso.response.body.$.dados.id}}
+@lancamentoId = {{criarLancamento.response.body.$.dados.lancamento.id}}
+@transferenciaId = {{criarTransferencia.response.body.$.dados.transferencia.id}}
+
+### Health check
 
 GET {{Grana.Api_HostAddress}}/health
 
-###
+### Contas: criar conta de origem
 
+# @name criarConta
 POST {{Grana.Api_HostAddress}}/api/contas
 Content-Type: application/json
 
 {
-  "nome": "Nubank",
+  "nome": "Conta Principal",
   "tipo": "Corrente",
   "saldoInicial": 1500
 }
 
-###
+### Contas: criar conta de destino
 
-GET {{Grana.Api_HostAddress}}/api/contas
-
-###
-
-GET {{Grana.Api_HostAddress}}/api/contas?incluirInativas=true
-
-###
-
-GET {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000
-
-###
-
-PUT {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000
+# @name criarContaDestino
+POST {{Grana.Api_HostAddress}}/api/contas
 Content-Type: application/json
 
 {
-  "nome": "Nubank PJ"
+  "nome": "Reserva",
+  "tipo": "Poupanca",
+  "saldoInicial": 0
 }
 
-###
+### Contas: criar conta com saldo zero (usada para desativar e reativar)
 
-PATCH {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000/desativar
+# @name criarContaVazia
+POST {{Grana.Api_HostAddress}}/api/contas
+Content-Type: application/json
 
-###
+{
+  "nome": "Conta Vazia",
+  "tipo": "Carteira",
+  "saldoInicial": 0
+}
 
-PATCH {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000/reativar
+### Contas: listar ativas
 
-###
+GET {{Grana.Api_HostAddress}}/api/contas
 
+### Contas: listar incluindo inativas
+
+GET {{Grana.Api_HostAddress}}/api/contas?incluirInativas=true
+
+### Contas: buscar por id
+
+GET {{Grana.Api_HostAddress}}/api/contas/{{contaId}}
+
+### Contas: renomear
+
+PUT {{Grana.Api_HostAddress}}/api/contas/{{contaId}}
+Content-Type: application/json
+
+{
+  "nome": "Conta Principal Renomeada"
+}
+
+### Contas: desativar (só com saldo zero)
+
+PATCH {{Grana.Api_HostAddress}}/api/contas/{{contaVaziaId}}/desativar
+
+### Contas: reativar
+
+PATCH {{Grana.Api_HostAddress}}/api/contas/{{contaVaziaId}}/reativar
+
+### Categorias: criar de despesa com orçamento
+
+# @name criarCategoriaDespesa
 POST {{Grana.Api_HostAddress}}/api/categorias
 Content-Type: application/json
 
 {
-  "nome": "Alimentação",
+  "nome": "Feira",
   "tipo": "Despesa",
   "orcamentoMensal": 800
 }
 
-###
+### Categorias: criar de receita
 
-GET {{Grana.Api_HostAddress}}/api/categorias
-
-###
-
-GET {{Grana.Api_HostAddress}}/api/categorias?tipo=Despesa
-
-###
-
-GET {{Grana.Api_HostAddress}}/api/categorias/00000000-0000-0000-0000-000000000000
-
-###
-
-PUT {{Grana.Api_HostAddress}}/api/categorias/00000000-0000-0000-0000-000000000000
+# @name criarCategoriaReceita
+POST {{Grana.Api_HostAddress}}/api/categorias
 Content-Type: application/json
 
 {
-  "nome": "Mercado",
-  "orcamentoMensal": null
+  "nome": "Bônus",
+  "tipo": "Receita"
 }
 
-###
+### Categorias: criar sem lançamentos (usada para excluir)
 
-DELETE {{Grana.Api_HostAddress}}/api/categorias/00000000-0000-0000-0000-000000000000
+# @name criarCategoriaSemUso
+POST {{Grana.Api_HostAddress}}/api/categorias
+Content-Type: application/json
 
-###
+{
+  "nome": "Temporária",
+  "tipo": "Despesa"
+}
 
-GET {{Grana.Api_HostAddress}}/api/lancamentos/00000000-0000-0000-0000-000000000000
+### Categorias: listar
 
-###
+GET {{Grana.Api_HostAddress}}/api/categorias
+
+### Categorias: listar por tipo
+
+GET {{Grana.Api_HostAddress}}/api/categorias?tipo=Despesa
+
+### Categorias: buscar por id
+
+GET {{Grana.Api_HostAddress}}/api/categorias/{{categoriaDespesaId}}
+
+### Categorias: editar nome e orçamento
+
+PUT {{Grana.Api_HostAddress}}/api/categorias/{{categoriaDespesaId}}
+Content-Type: application/json
+
+{
+  "nome": "Feira e Hortifruti",
+  "orcamentoMensal": 900
+}
+
+### Categorias: excluir (só sem lançamentos)
+
+DELETE {{Grana.Api_HostAddress}}/api/categorias/{{categoriaSemUsoId}}
+
+### Lançamentos: criar receita
 
 POST {{Grana.Api_HostAddress}}/api/lancamentos
 Content-Type: application/json
 
 {
-  "contaId": "00000000-0000-0000-0000-000000000000",
-  "categoriaId": "00000000-0000-0000-0000-000000000000",
-  "valor": 150.00,
-  "data": "2026-11-23",
-  "descricao": "Compra do mês"
+  "contaId": "{{contaId}}",
+  "categoriaId": "{{categoriaReceitaId}}",
+  "valor": 1000.00,
+  "data": "2026-11-05",
+  "descricao": "Bônus de fim de ano"
 }
 
-###
+### Lançamentos: criar despesa
 
-GET {{Grana.Api_HostAddress}}/api/lancamentos
-
-###
-
-GET {{Grana.Api_HostAddress}}/api/lancamentos?contaId=00000000-0000-0000-0000-000000000000&tipo=Despesa&dataInicio=2026-11-01&dataFim=2026-11-30&busca=mercado&pagina=1&tamanhoPagina=20
-
-###
-
-PUT {{Grana.Api_HostAddress}}/api/lancamentos/00000000-0000-0000-0000-000000000000
+# @name criarLancamento
+POST {{Grana.Api_HostAddress}}/api/lancamentos
 Content-Type: application/json
 
 {
-  "categoriaId": "00000000-0000-0000-0000-000000000000",
-  "valor": 80.00,
-  "data": "2026-11-24",
-  "descricao": "Compra do mês"
+  "contaId": "{{contaId}}",
+  "categoriaId": "{{categoriaDespesaId}}",
+  "valor": 250.00,
+  "data": "2026-11-20",
+  "descricao": "Feira do mês"
 }
 
-###
+### Lançamentos: listar
 
-DELETE {{Grana.Api_HostAddress}}/api/lancamentos/00000000-0000-0000-0000-000000000000
+GET {{Grana.Api_HostAddress}}/api/lancamentos
 
-###
+### Lançamentos: listar com filtros e paginação
 
+GET {{Grana.Api_HostAddress}}/api/lancamentos?contaId={{contaId}}&tipo=Despesa&dataInicio=2026-11-01&dataFim=2026-11-30&busca=feira&pagina=1&tamanhoPagina=20
+
+### Lançamentos: buscar por id
+
+GET {{Grana.Api_HostAddress}}/api/lancamentos/{{lancamentoId}}
+
+### Lançamentos: editar
+
+PUT {{Grana.Api_HostAddress}}/api/lancamentos/{{lancamentoId}}
+Content-Type: application/json
+
+{
+  "categoriaId": "{{categoriaDespesaId}}",
+  "valor": 400.00,
+  "data": "2026-11-20",
+  "descricao": "Feira do mês"
+}
+
+### Transferências: criar
+
+# @name criarTransferencia
 POST {{Grana.Api_HostAddress}}/api/transferencias
 Content-Type: application/json
 
 {
-  "contaOrigemId": "00000000-0000-0000-0000-000000000000",
-  "contaDestinoId": "00000000-0000-0000-0000-000000000000",
+  "contaOrigemId": "{{contaId}}",
+  "contaDestinoId": "{{contaDestinoId}}",
   "valor": 300.00,
-  "data": "2026-11-25",
+  "data": "2026-11-21",
   "descricao": "Reserva de emergência"
 }
 
-###
+### Transferências: listar
 
 GET {{Grana.Api_HostAddress}}/api/transferencias
 
-###
+### Transferências: listar com filtros
 
-GET {{Grana.Api_HostAddress}}/api/transferencias?contaId=00000000-0000-0000-0000-000000000000&dataInicio=2026-11-01&dataFim=2026-11-30
+GET {{Grana.Api_HostAddress}}/api/transferencias?contaId={{contaId}}&dataInicio=2026-11-01&dataFim=2026-11-30
 
-###
+### Transferências: buscar por id
 
-GET {{Grana.Api_HostAddress}}/api/transferencias/00000000-0000-0000-0000-000000000000
+GET {{Grana.Api_HostAddress}}/api/transferencias/{{transferenciaId}}
 
-###
-
-DELETE {{Grana.Api_HostAddress}}/api/transferencias/00000000-0000-0000-0000-000000000000
-
-###
+### Orçamentos: mês atual
 
 GET {{Grana.Api_HostAddress}}/api/orcamentos
 
-###
+### Orçamentos: mês informado
 
 GET {{Grana.Api_HostAddress}}/api/orcamentos?ano=2026&mes=11
 
-###
+### Resumo: mês atual
 
 GET {{Grana.Api_HostAddress}}/api/resumo
 
-###
+### Resumo: mês informado
 
 GET {{Grana.Api_HostAddress}}/api/resumo?ano=2026&mes=11
 
-###
+### Extrato: mês atual
 
-GET {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000/extrato
+GET {{Grana.Api_HostAddress}}/api/contas/{{contaId}}/extrato
 
-###
+### Extrato: período informado
 
-GET {{Grana.Api_HostAddress}}/api/contas/00000000-0000-0000-0000-000000000000/extrato?dataInicio=2026-11-01&dataFim=2026-11-30
+GET {{Grana.Api_HostAddress}}/api/contas/{{contaId}}/extrato?dataInicio=2026-11-01&dataFim=2026-11-30
 
-###
+### Transferências: excluir (desfaz os saldos)
+
+DELETE {{Grana.Api_HostAddress}}/api/transferencias/{{transferenciaId}}
+
+### Lançamentos: excluir (estorna o saldo)
+
+DELETE {{Grana.Api_HostAddress}}/api/lancamentos/{{lancamentoId}}

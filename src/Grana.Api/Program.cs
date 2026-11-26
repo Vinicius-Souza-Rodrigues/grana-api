@@ -45,6 +45,13 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
+if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("SeedDemo"))
+{
+    using var escopo = app.Services.CreateScope();
+    var seedDemo = new SeedDemo(escopo.ServiceProvider.GetRequiredService<GranaDbContext>());
+    await seedDemo.Executar(DateOnly.FromDateTime(DateTime.UtcNow), CancellationToken.None);
+}
+
 app.MapOpenApi();
 app.MapScalarApiReference();
 
