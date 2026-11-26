@@ -24,6 +24,8 @@ public sealed class LancamentoConfiguration : IEntityTypeConfiguration<Lancament
 
         builder.Property(l => l.CriadoEm).IsRequired();
 
+        builder.HasIndex(l => l.Data);
+
         builder.HasOne(l => l.Conta)
             .WithMany()
             .HasForeignKey(l => l.IdConta)

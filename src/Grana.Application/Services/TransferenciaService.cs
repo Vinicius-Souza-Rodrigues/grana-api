@@ -33,7 +33,10 @@ public sealed class TransferenciaService(ITransferenciaRepository transferenciaR
             return null;
 
         await transferenciaRepository.AdicionarTransferencia(transferencia, cancellationToken);
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return transferencia;
     }
@@ -64,7 +67,7 @@ public sealed class TransferenciaService(ITransferenciaRepository transferenciaR
             return;
 
         await transferenciaRepository.RemoverTransferencia(transferencia, cancellationToken);
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Transferencia>> ListarTransferencias(TransferenciaListarDto dto, Notificacao notificacao, CancellationToken cancellationToken)

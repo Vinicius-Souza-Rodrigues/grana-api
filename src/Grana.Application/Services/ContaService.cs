@@ -24,7 +24,10 @@ public sealed class ContaService(IContaRepository contaRepository, IUnitOfWork u
         }
 
         await contaRepository.AdicionarConta(conta, cancellationToken);
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return conta;
     }
@@ -65,7 +68,10 @@ public sealed class ContaService(IContaRepository contaRepository, IUnitOfWork u
         if (notificacao.TemNotificacoes)
             return null;
 
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return conta;
     }
@@ -85,7 +91,10 @@ public sealed class ContaService(IContaRepository contaRepository, IUnitOfWork u
         if (notificacao.TemNotificacoes)
             return null;
 
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return conta;
     }
@@ -111,7 +120,10 @@ public sealed class ContaService(IContaRepository contaRepository, IUnitOfWork u
         if (notificacao.TemNotificacoes)
             return null;
 
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return conta;
     }
@@ -131,7 +143,7 @@ public sealed class ContaService(IContaRepository contaRepository, IUnitOfWork u
         conta.Creditar(valorCredito, notificacao);
 
         if (!notificacao.TemNotificacoes)
-            await unitOfWork.Salvar(cancellationToken);
+            await unitOfWork.Salvar(notificacao, cancellationToken);
 
         return notificacao;
     }
@@ -151,7 +163,7 @@ public sealed class ContaService(IContaRepository contaRepository, IUnitOfWork u
         conta.Debitar(valorDebito, notificacao);
 
         if (!notificacao.TemNotificacoes)
-            await unitOfWork.Salvar(cancellationToken);
+            await unitOfWork.Salvar(notificacao, cancellationToken);
 
         return notificacao;
     }

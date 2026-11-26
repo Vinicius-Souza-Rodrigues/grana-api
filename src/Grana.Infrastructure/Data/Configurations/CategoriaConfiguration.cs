@@ -21,5 +21,7 @@ public sealed class CategoriaConfiguration : IEntityTypeConfiguration<Categoria>
         builder.Property(c => c.TipoCategoria).IsRequired();
 
         builder.Property(c => c.OrcamentoMensal);
+
+        builder.HasIndex(c => new { c.TipoCategoria, c.Nome }).IsUnique();
     }
 }
