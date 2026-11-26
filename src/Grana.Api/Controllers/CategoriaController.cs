@@ -7,9 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+[Tags("Categorias")]
 [Route("api/categorias")]
 public sealed class CategoriaController(ICategoriaService categoriaService) : ApiController
 {
+    [EndpointSummary("Cria uma categoria")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPost]
     public async Task<IActionResult> CriarCategoria(CategoriaCriarDto categoriaCriar, CancellationToken cancellationToken)
     {
@@ -20,6 +25,9 @@ public sealed class CategoriaController(ICategoriaService categoriaService) : Ap
         return ResponderCriado(notificacao, nameof(ObterCategoriaPorId), new { id = categoria?.Id }, "Categoria criada com sucesso.", MontarDetalhe(categoria));
     }
 
+    [EndpointSummary("Lista as categorias")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpGet]
     public async Task<IActionResult> ListarCategorias([FromQuery] string tipo, CancellationToken cancellationToken)
     {
@@ -30,6 +38,9 @@ public sealed class CategoriaController(ICategoriaService categoriaService) : Ap
         return Responder(notificacao, 200, "Categorias encontradas.", categorias?.Select(MontarDetalhe).ToList());
     }
 
+    [EndpointSummary("Busca uma categoria pelo id")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> ObterCategoriaPorId(Guid id, CancellationToken cancellationToken)
     {
@@ -40,6 +51,11 @@ public sealed class CategoriaController(ICategoriaService categoriaService) : Ap
         return Responder(notificacao, 200, "Categoria encontrada.", MontarDetalhe(categoria));
     }
 
+    [EndpointSummary("Edita o nome e o orçamento de uma categoria")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> EditarCategoria(Guid id, CategoriaEditarDto categoriaEditar, CancellationToken cancellationToken)
     {
@@ -50,6 +66,10 @@ public sealed class CategoriaController(ICategoriaService categoriaService) : Ap
         return Responder(notificacao, 200, "Categoria atualizada com sucesso.", MontarDetalhe(categoria));
     }
 
+    [EndpointSummary("Exclui uma categoria sem lançamentos")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> ExcluirCategoria(Guid id, CancellationToken cancellationToken)
     {

@@ -7,9 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+[Tags("Extrato")]
 [Route("api/contas/{id:guid}/extrato")]
 public sealed class ExtratoController(IExtratoService extratoService) : ApiController
 {
+    [EndpointSummary("Mostra o extrato de uma conta no período")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet]
     public async Task<IActionResult> ObterExtratoConta(Guid id, [FromQuery] ExtratoContaDto extratoConta, CancellationToken cancellationToken)
     {
