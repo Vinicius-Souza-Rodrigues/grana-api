@@ -136,6 +136,22 @@ dotnet run --project src/Grana.Api
 
 O `dotnet tool restore` instala o `dotnet-ef` na versão do projeto. As migrations ficam em `src/Grana.Infrastructure/Migrations`.
 
+### Dados de demonstração (opcional)
+
+Para começar com dados prontos, rode a API com o seed ligado:
+
+```bash
+dotnet run --project src/Grana.Api -- --SeedDemo=true
+```
+
+O seed cria 3 contas (Nubank, Inter e Carteira), 6 categorias com orçamento, lançamentos do mês anterior e do mês atual e duas transferências. Assim o resumo, o orçamento e o extrato já mostram números de verdade. O seed só roda em Development e só quando o banco não tem nenhuma conta, então ligar de novo não duplica nada. Também dá para deixar `"SeedDemo": true` no `appsettings.Development.json`.
+
+O usuário demo e as credenciais entram junto com a autenticação.
+
+### Testando os endpoints
+
+O arquivo `src/Grana.Api/Grana.Api.http` tem uma requisição para cada endpoint e roda no Visual Studio, no Rider ou no VS Code com a extensão REST Client. As requisições são encadeadas: as primeiras criam contas, categorias, um lançamento e uma transferência, e as seguintes usam os ids dessas respostas. É só executar de cima para baixo. Os nomes não colidem com os do seed. Para rodar o arquivo de novo, limpe o banco ou troque os nomes, porque conta e categoria não aceitam nome repetido.
+
 ### Documentação
 
 Com a API rodando, a documentação interativa fica em `http://localhost:5180/scalar`, e o documento OpenAPI em `http://localhost:5180/openapi/v1.json`. Cada endpoint traz um exemplo de requisição, exemplos de resposta para cada código possível (200, 201, 204, 400, 404 e 409) e o esquema Bearer, que vai servir para as rotas autenticadas.
