@@ -2,6 +2,10 @@
 
 ###
 
+GET {{Grana.Api_HostAddress}}/health
+
+###
+
 POST {{Grana.Api_HostAddress}}/api/contas
 Content-Type: application/json
 

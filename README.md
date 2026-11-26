@@ -23,6 +23,7 @@ O objetivo do projeto é praticar regras de negócio bem feitas. Quem decide se 
 - **Lançamentos:** entradas e saídas que atualizam o saldo da conta.
 - **Transferências:** dinheiro de uma conta para outra.
 - **Orçamento, resumo mensal e extrato:** quanto foi gasto, o saldo do mês e as movimentações de cada conta.
+- **Health check:** `GET /health` responde 200 `Healthy` com o banco no ar e 503 `Unhealthy` quando não consegue conectar.
 
 Alguns exemplos de regras:
 

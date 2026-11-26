@@ -29,6 +29,8 @@ builder.Services.AddScoped<ITransferenciaRepository, TransferenciaRepository>();
 builder.Services.AddScoped<IOrcamentoService, OrcamentoService>();
 builder.Services.AddScoped<IResumoService, ResumoService>();
 builder.Services.AddScoped<IExtratoService, ExtratoService>();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<GranaDbContext>();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<TratadorDeExcecoes>();
@@ -47,5 +49,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHealthChecks("/health");
 
 app.Run();
