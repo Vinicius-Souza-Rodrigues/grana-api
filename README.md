@@ -76,6 +76,29 @@ flowchart LR
 
 ---
 
+## Rodando com Docker
+
+Só precisa do [Docker](https://www.docker.com/). Não precisa do .NET instalado.
+
+```bash
+git clone https://github.com/Vinicius-Souza-Rodrigues/grana-api.git
+cd grana-api
+cp .env.example .env
+docker compose up
+```
+
+O compose sobe três serviços em ordem:
+
+1. `db`: PostgreSQL 17, exposto na porta 5433 do host para não conflitar com um Postgres local.
+2. `migrations`: espera o banco ficar saudável, aplica as migrations com um bundle do EF Core e termina.
+3. `api`: só sobe depois que as migrations terminam. Fica em `http://localhost:8080`, e o healthcheck do compose usa o `/health`.
+
+As credenciais do banco ficam no `.env`, que não é commitado. O `.env.example` traz os nomes das variáveis. Troque a senha antes de usar.
+
+Para derrubar tudo, use `docker compose down`. Para apagar também os dados, use `docker compose down -v`.
+
+---
+
 ## Como rodar
 
 Precisa do [.NET SDK 10](https://dotnet.microsoft.com/download) e do [Docker](https://www.docker.com/) para subir o PostgreSQL.
