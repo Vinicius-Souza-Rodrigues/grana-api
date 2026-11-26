@@ -70,6 +70,8 @@ flowchart LR
 - **DTOs na entrada e na saída.** A API não expõe as entidades do domínio.
 - **Erros inesperados tratados em um lugar só**, com um `IExceptionHandler` que grava o detalhe no log.
 - **Unit of Work para salvar.** Os services alteram as entidades e chamam `Salvar` uma vez no fim. Uma transferência grava as duas contas e o registro num único `SaveChanges`, então ou tudo é salvo ou nada é. Se o domínio devolver erro, nada é salvo.
+- **Concorrência otimista na conta.** A `Conta` tem uma coluna `versao` que muda a cada alteração salva. Se duas operações carregam a mesma conta e as duas tentam salvar, só a primeira passa. A outra recebe 409 e nada dela é gravado, então dois débitos simultâneos não deixam o saldo negativo.
+- **Índices no banco.** Conta ativa com nome único, categoria única por tipo e nome, e índice na data dos lançamentos. Os services já validam isso, mas o banco garante a regra mesmo com requisições simultâneas.
 
 ---
 

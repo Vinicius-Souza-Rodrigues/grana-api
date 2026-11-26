@@ -41,7 +41,10 @@ public sealed class LancamentoService(ILancamentoRepository lancamentoRepository
         categoria.VerificarOrcamento(totalDespesasNoMes + lancamento.Valor, notificacao);
 
         await lancamentoRepository.AdicionarLancamento(lancamento, cancellationToken);
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return lancamento;
     }
@@ -103,7 +106,10 @@ public sealed class LancamentoService(ILancamentoRepository lancamentoRepository
         if (notificacao.TemNotificacoes)
             return null;
 
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return lancamento;
     }
@@ -124,6 +130,6 @@ public sealed class LancamentoService(ILancamentoRepository lancamentoRepository
             return;
 
         await lancamentoRepository.RemoverLancamento(lancamento, cancellationToken);
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
     }
 }

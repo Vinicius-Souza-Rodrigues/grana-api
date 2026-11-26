@@ -24,7 +24,10 @@ public sealed class CategoriaService(ICategoriaRepository categoriaRepository, I
         }
 
         await categoriaRepository.AdicionarCategoria(categoria, cancellationToken);
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return categoria;
     }
@@ -74,7 +77,10 @@ public sealed class CategoriaService(ICategoriaRepository categoriaRepository, I
         if (notificacao.TemNotificacoes)
             return null;
 
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
+
+        if (notificacao.TemNotificacoes)
+            return null;
 
         return categoria;
     }
@@ -97,6 +103,6 @@ public sealed class CategoriaService(ICategoriaRepository categoriaRepository, I
             return;
 
         await categoriaRepository.RemoverCategoria(categoria, cancellationToken);
-        await unitOfWork.Salvar(cancellationToken);
+        await unitOfWork.Salvar(notificacao, cancellationToken);
     }
 }

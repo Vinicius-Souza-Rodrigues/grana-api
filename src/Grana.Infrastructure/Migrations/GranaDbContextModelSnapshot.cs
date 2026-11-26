@@ -46,6 +46,10 @@ namespace Grana.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_categorias");
 
+                    b.HasIndex("TipoCategoria", "Nome")
+                        .IsUnique()
+                        .HasDatabaseName("ix_categorias_tipo_categoria_nome");
+
                     b.ToTable("categorias", (string)null);
                 });
 
@@ -83,8 +87,18 @@ namespace Grana.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("tipo_conta");
 
+                    b.Property<Guid>("Versao")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid")
+                        .HasColumnName("versao");
+
                     b.HasKey("Id")
                         .HasName("pk_contas");
+
+                    b.HasIndex("Nome")
+                        .IsUnique()
+                        .HasDatabaseName("ix_contas_nome")
+                        .HasFilter("status_atividade_conta = 1");
 
                     b.ToTable("contas", (string)null);
                 });
@@ -127,6 +141,9 @@ namespace Grana.Infrastructure.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_lancamentos");
+
+                    b.HasIndex("Data")
+                        .HasDatabaseName("ix_lancamentos_data");
 
                     b.HasIndex("IdCategoria")
                         .HasDatabaseName("ix_lancamentos_id_categoria");
