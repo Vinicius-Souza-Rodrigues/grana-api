@@ -6,6 +6,7 @@
     <Project Path="src/Grana.Infrastructure/Grana.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Grana.IntegrationTests/Grana.IntegrationTests.csproj" />
     <Project Path="tests/Grana.Tests/Grana.Tests.csproj" />
   </Folder>
 </Solution>

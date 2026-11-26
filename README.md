@@ -116,7 +116,16 @@ O `dotnet tool restore` instala o `dotnet-ef` na versão do projeto. As migratio
 dotnet test
 ```
 
-Os testes usam o provider em memória do EF Core e não precisam do banco.
+São dois projetos de teste:
+
+- `tests/Grana.Tests`: testes de unidade e de controller com o provider em memória do EF Core. Não precisam de banco.
+- `tests/Grana.IntegrationTests`: testes ponta a ponta com `WebApplicationFactory` contra um PostgreSQL real, que o Testcontainers sobe num container. Cobrem o fluxo completo até o extrato, a atomicidade da transferência e a concorrência na conta. Precisam do Docker rodando, e o Respawn limpa o banco antes de cada teste.
+
+Para rodar só os testes de unidade, sem Docker:
+
+```bash
+dotnet test tests/Grana.Tests
+```
 
 ---
 
