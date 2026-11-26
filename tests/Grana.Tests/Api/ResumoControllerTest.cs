@@ -6,8 +6,10 @@ using Application.Services;
 using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
+using Infraestructure.Data;
 using Infraestructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Tests.Shared;
 
 namespace Tests.Api;
 
@@ -18,12 +20,15 @@ public sealed class ResumoControllerTest
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private readonly LancamentoRepository _lancamentoRepositorio = new();
-    private readonly ContaRepository _contaRepositorio = new();
+    private readonly GranaDbContext _contexto = BancoEmMemoria.CriarContexto();
+    private readonly LancamentoRepository _lancamentoRepositorio;
+    private readonly ContaRepository _contaRepositorio;
     private readonly ResumoController _controller;
 
     public ResumoControllerTest()
     {
+        _lancamentoRepositorio = new LancamentoRepository(_contexto);
+        _contaRepositorio = new ContaRepository(_contexto);
         _controller = new ResumoController(new ResumoService(_lancamentoRepositorio, _contaRepositorio));
     }
 
@@ -91,6 +96,7 @@ public sealed class ResumoControllerTest
         await CriarConta("Inter", 250.50m);
         var antiga = await CriarConta("Antiga", 0m);
         antiga.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var dados = await ObterResumo(2025, 11);
 
@@ -127,6 +133,7 @@ public sealed class ResumoControllerTest
         var destino = await CriarConta("Inter", 500m);
         var transferencia = Transferencia.CriacaoTransferencia(origem, destino, 300m, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
         transferencia.Efetivar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
         var dados = await ObterResumo(hoje.Year, hoje.Month);
@@ -154,6 +161,7 @@ public sealed class ResumoControllerTest
     {
         var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, saldo, new Notificacao());
         await _contaRepositorio.AdicionarConta(conta, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return conta;
     }
@@ -162,5 +170,6 @@ public sealed class ResumoControllerTest
     {
         var lancamento = Lancamento.CriacaoLancamento(conta, categoria, valor, data, null, new Notificacao());
         await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
     }
 }

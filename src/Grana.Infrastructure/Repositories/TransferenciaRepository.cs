@@ -1,44 +1,42 @@
 using Application.Interfaces;
 using Domain.Models;
+using Infraestructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infraestructure.Repositories;
 
-public sealed class TransferenciaRepository : ITransferenciaRepository
+public sealed class TransferenciaRepository(GranaDbContext contexto) : ITransferenciaRepository
 {
-    private List<Transferencia> _transferencias = [];
+    private IQueryable<Transferencia> TransferenciasCompletas => contexto.Transferencias
+        .Include(t => t.ContaOrigem)
+        .Include(t => t.ContaDestino);
 
-    public Task AdicionarTransferencia(Transferencia transferencia, CancellationToken cancellationToken)
+    public async Task AdicionarTransferencia(Transferencia transferencia, CancellationToken cancellationToken)
     {
-        _transferencias.Add(transferencia);
-
-        return Task.CompletedTask;
+        await contexto.Transferencias.AddAsync(transferencia, cancellationToken);
     }
 
     public Task<Transferencia> ObterTransferenciaPorId(Guid idTransferencia, CancellationToken cancellationToken)
     {
-        var transferencia = _transferencias.Find(t => t.Id.Equals(idTransferencia));
-
-        return Task.FromResult(transferencia);
+        return TransferenciasCompletas.FirstOrDefaultAsync(t => t.Id == idTransferencia, cancellationToken);
     }
 
     public Task RemoverTransferencia(Transferencia transferencia, CancellationToken cancellationToken)
     {
-        _transferencias.Remove(transferencia);
+        contexto.Transferencias.Remove(transferencia);
 
         return Task.CompletedTask;
     }
 
-    public Task<IReadOnlyList<Transferencia>> ListarTransferencias(FiltroTransferencia filtro, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Transferencia>> ListarTransferencias(FiltroTransferencia filtro, CancellationToken cancellationToken)
     {
-        IReadOnlyList<Transferencia> transferencias = _transferencias
+        return await TransferenciasCompletas
             .Where(t =>
-                (filtro.IdConta is null || t.IdContaOrigem == filtro.IdConta || t.IdContaDestino == filtro.IdConta) &&
-                (filtro.DataInicio is null || t.Data >= filtro.DataInicio) &&
-                (filtro.DataFim is null || t.Data <= filtro.DataFim))
+                (filtro.IdConta == null || t.IdContaOrigem == filtro.IdConta || t.IdContaDestino == filtro.IdConta) &&
+                (filtro.DataInicio == null || t.Data >= filtro.DataInicio) &&
+                (filtro.DataFim == null || t.Data <= filtro.DataFim))
             .OrderByDescending(t => t.Data)
             .ThenByDescending(t => t.CriadoEm)
-            .ToList();
-
-        return Task.FromResult(transferencias);
+            .ToListAsync(cancellationToken);
     }
 }

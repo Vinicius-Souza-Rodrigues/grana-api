@@ -6,8 +6,10 @@ using Application.Services;
 using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
+using Infraestructure.Data;
 using Infraestructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Tests.Shared;
 
 namespace Tests.Api;
 
@@ -21,15 +23,19 @@ public sealed class ExtratoControllerTest
 
     private static readonly DateOnly Hoje = DateOnly.FromDateTime(DateTime.UtcNow);
 
-    private readonly ContaRepository _contaRepositorio = new();
-    private readonly LancamentoRepository _lancamentoRepositorio = new();
-    private readonly TransferenciaRepository _transferenciaRepositorio = new();
+    private readonly GranaDbContext _contexto = BancoEmMemoria.CriarContexto();
+    private readonly ContaRepository _contaRepositorio;
+    private readonly LancamentoRepository _lancamentoRepositorio;
+    private readonly TransferenciaRepository _transferenciaRepositorio;
     private readonly ExtratoController _controller;
     private readonly Categoria _salario = Categoria.CriacaoCategoria("Salário", TipoCategoriaEnum.Receita, null, new Notificacao());
     private readonly Categoria _mercado = Categoria.CriacaoCategoria("Mercado", TipoCategoriaEnum.Despesa, null, new Notificacao());
 
     public ExtratoControllerTest()
     {
+        _contaRepositorio = new ContaRepository(_contexto);
+        _lancamentoRepositorio = new LancamentoRepository(_contexto);
+        _transferenciaRepositorio = new TransferenciaRepository(_contexto);
         _controller = new ExtratoController(new ExtratoService(_contaRepositorio, _lancamentoRepositorio, _transferenciaRepositorio));
     }
 
@@ -108,6 +114,7 @@ public sealed class ExtratoControllerTest
         var conta = await CriarConta("Antiga", 100m);
         await AdicionarLancamento(conta, _mercado, 100m, Hoje.AddDays(-1));
         conta.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var dados = await ObterDados(conta.Id, Hoje.AddDays(-7), Hoje);
 
@@ -139,6 +146,7 @@ public sealed class ExtratoControllerTest
     {
         var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, saldo, new Notificacao());
         await _contaRepositorio.AdicionarConta(conta, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return conta;
     }
@@ -148,12 +156,15 @@ public sealed class ExtratoControllerTest
         var lancamento = Lancamento.CriacaoLancamento(conta, categoria, valor, data, null, new Notificacao());
         conta.AplicarLancamento(lancamento, new Notificacao());
         await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
     }
 
     private async Task AdicionarTransferencia(Conta origem, Conta destino, decimal valor, DateOnly data)
     {
         var transferencia = Transferencia.CriacaoTransferencia(origem, destino, valor, data, null, new Notificacao());
         transferencia.Efetivar(new Notificacao());
+        await _contexto.SaveChangesAsync();
         await _transferenciaRepositorio.AdicionarTransferencia(transferencia, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
     }
 }

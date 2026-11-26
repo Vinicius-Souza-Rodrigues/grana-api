@@ -6,7 +6,7 @@ using Grana.Domain.Notificacoes;
 
 namespace Application.Services;
 
-public sealed class ContaService(IContaRepository contaRepository) : IContaService
+public sealed class ContaService(IContaRepository contaRepository, IUnitOfWork unitOfWork) : IContaService
 {
     public async Task<Conta> CriarConta(ContaCriarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
     {
@@ -24,6 +24,7 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
         }
 
         await contaRepository.AdicionarConta(conta, cancellationToken);
+        await unitOfWork.Salvar(cancellationToken);
 
         return conta;
     }
@@ -64,6 +65,8 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
         if (notificacao.TemNotificacoes)
             return null;
 
+        await unitOfWork.Salvar(cancellationToken);
+
         return conta;
     }
 
@@ -81,6 +84,8 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
 
         if (notificacao.TemNotificacoes)
             return null;
+
+        await unitOfWork.Salvar(cancellationToken);
 
         return conta;
     }
@@ -106,6 +111,8 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
         if (notificacao.TemNotificacoes)
             return null;
 
+        await unitOfWork.Salvar(cancellationToken);
+
         return conta;
     }
 
@@ -123,6 +130,9 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
 
         conta.Creditar(valorCredito, notificacao);
 
+        if (!notificacao.TemNotificacoes)
+            await unitOfWork.Salvar(cancellationToken);
+
         return notificacao;
     }
 
@@ -139,6 +149,9 @@ public sealed class ContaService(IContaRepository contaRepository) : IContaServi
         }
 
         conta.Debitar(valorDebito, notificacao);
+
+        if (!notificacao.TemNotificacoes)
+            await unitOfWork.Salvar(cancellationToken);
 
         return notificacao;
     }

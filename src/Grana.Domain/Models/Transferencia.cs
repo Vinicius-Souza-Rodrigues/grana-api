@@ -5,6 +5,10 @@ namespace Domain.Models;
 
 public sealed class Transferencia
 {
+    private Transferencia()
+    {
+    }
+
     private Transferencia(Conta contaOrigem, Conta contaDestino, decimal valor, DateOnly data, string descricao)
     {
         Id = Guid.NewGuid();

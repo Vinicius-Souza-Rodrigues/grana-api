@@ -1,44 +1,39 @@
 using Application.Interfaces;
 using Domain.Enums;
 using Domain.Models;
+using Infraestructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infraestructure.Repositories;
 
-public sealed class ContaRepository : IContaRepository
+public sealed class ContaRepository(GranaDbContext contexto) : IContaRepository
 {
-    private List<Conta> _contas = [];
-
-    public Task AdicionarConta(Conta conta, CancellationToken cancellationToken)
+    public async Task AdicionarConta(Conta conta, CancellationToken cancellationToken)
     {
-        _contas.Add(conta);
-
-        return Task.CompletedTask;
+        await contexto.Contas.AddAsync(conta, cancellationToken);
     }
-    
+
     public Task<Conta> ObterContaPorId(Guid idConta, CancellationToken cancellationToken)
     {
-        var conta =_contas.Find(c => c.Id.Equals(idConta));
-        
-        return Task.FromResult(conta);
+        return contexto.Contas.FirstOrDefaultAsync(c => c.Id == idConta, cancellationToken);
     }
 
     public Task<bool> ExisteContaAtivaComNome(string nome, Guid idContaIgnorada, CancellationToken cancellationToken)
     {
-        var existe = _contas.Exists(c =>
+        var nomeNormalizado = nome?.ToLower();
+
+        return contexto.Contas.AnyAsync(c =>
             c.Id != idContaIgnorada &&
             c.StatusAtividadeConta == StatusAtividadeContaEnum.Ativo &&
-            string.Equals(c.Nome, nome, StringComparison.OrdinalIgnoreCase));
-
-        return Task.FromResult(existe);
+            c.Nome.ToLower() == nomeNormalizado,
+            cancellationToken);
     }
 
-    public Task<IReadOnlyList<Conta>> ListarContas(bool incluirInativas, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Conta>> ListarContas(bool incluirInativas, CancellationToken cancellationToken)
     {
-        IReadOnlyList<Conta> contas = _contas
+        return await contexto.Contas
             .Where(c => incluirInativas || c.StatusAtividadeConta == StatusAtividadeContaEnum.Ativo)
             .OrderBy(c => c.Nome)
-            .ToList();
-
-        return Task.FromResult(contas);
+            .ToListAsync(cancellationToken);
     }
 }
