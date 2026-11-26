@@ -8,9 +8,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+[Tags("Lançamentos")]
 [Route("api/lancamentos")]
 public sealed class LancamentoController(ILancamentoService lancamentoService) : ApiController
 {
+    [EndpointSummary("Cria um lançamento e atualiza o saldo da conta")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPost]
     public async Task<IActionResult> CriarLancamento(LancamentoCriarDto lancamentoCriar, CancellationToken cancellationToken)
     {
@@ -21,6 +27,11 @@ public sealed class LancamentoController(ILancamentoService lancamentoService) :
         return ResponderCriado(notificacao, nameof(ObterLancamentoPorId), new { id = lancamento?.Id }, "Lançamento criado com sucesso.", MontarComSaldo(lancamento));
     }
 
+    [EndpointSummary("Edita um lançamento e ajusta o saldo da conta")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> EditarLancamento(Guid id, LancamentoEditarDto lancamentoEditar, CancellationToken cancellationToken)
     {
@@ -31,6 +42,11 @@ public sealed class LancamentoController(ILancamentoService lancamentoService) :
         return Responder(notificacao, 200, "Lançamento atualizado com sucesso.", MontarComSaldo(lancamento));
     }
 
+    [EndpointSummary("Exclui um lançamento e estorna o saldo da conta")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> ExcluirLancamento(Guid id, CancellationToken cancellationToken)
     {
@@ -41,6 +57,9 @@ public sealed class LancamentoController(ILancamentoService lancamentoService) :
         return ResponderSemConteudo(notificacao);
     }
 
+    [EndpointSummary("Lista os lançamentos com filtros e paginação")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpGet]
     public async Task<IActionResult> ListarLancamentos([FromQuery] LancamentoListarDto lancamentoListar, CancellationToken cancellationToken)
     {
@@ -51,6 +70,9 @@ public sealed class LancamentoController(ILancamentoService lancamentoService) :
         return Responder(notificacao, 200, "Lançamentos encontrados.", MontarPaginacao(paginacao));
     }
 
+    [EndpointSummary("Busca um lançamento pelo id")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> ObterLancamentoPorId(Guid id, CancellationToken cancellationToken)
     {

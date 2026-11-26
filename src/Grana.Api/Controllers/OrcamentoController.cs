@@ -7,9 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+[Tags("Orçamentos")]
 [Route("api/orcamentos")]
 public sealed class OrcamentoController(IOrcamentoService orcamentoService) : ApiController
 {
+    [EndpointSummary("Mostra o orçamento do mês por categoria")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpGet]
     public async Task<IActionResult> ListarOrcamentos([FromQuery] OrcamentoListarDto orcamentoListar, CancellationToken cancellationToken)
     {

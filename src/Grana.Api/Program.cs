@@ -2,9 +2,11 @@ using System.Text.Json.Serialization;
 using Application.Interfaces;
 using Application.Services;
 using Grana.Api.Middlewares;
+using Grana.Api.OpenApi;
 using Infraestructure.Data;
 using Infraestructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +33,11 @@ builder.Services.AddScoped<IResumoService, ResumoService>();
 builder.Services.AddScoped<IExtratoService, ExtratoService>();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<GranaDbContext>();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(o =>
+{
+    o.AddDocumentTransformer<DocumentoOpenApiTransformer>();
+    o.AddOperationTransformer<ExemplosOpenApiTransformer>();
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<TratadorDeExcecoes>();
 
@@ -39,10 +45,8 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.UseHttpsRedirection();
 

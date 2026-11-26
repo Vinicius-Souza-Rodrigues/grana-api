@@ -7,9 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+[Tags("Resumo")]
 [Route("api/resumo")]
 public sealed class ResumoController(IResumoService resumoService) : ApiController
 {
+    [EndpointSummary("Mostra o resumo financeiro do mês")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpGet]
     public async Task<IActionResult> ObterResumoMensal([FromQuery] ResumoMensalDto resumoMensal, CancellationToken cancellationToken)
     {

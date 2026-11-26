@@ -12,7 +12,7 @@ O objetivo do projeto é praticar regras de negócio bem feitas. Quem decide se 
 - Docker
 - JWT
 - GitHub Actions
-- Scalar / Swagger
+- OpenAPI e Scalar
 
 ---
 
@@ -93,6 +93,8 @@ O compose sobe três serviços em ordem:
 2. `migrations`: espera o banco ficar saudável, aplica as migrations com um bundle do EF Core e termina.
 3. `api`: só sobe depois que as migrations terminam. Fica em `http://localhost:8080`, e o healthcheck do compose usa o `/health`.
 
+Com tudo no ar, a documentação interativa fica em `http://localhost:8080/scalar`.
+
 As credenciais do banco ficam no `.env`, que não é commitado. O `.env.example` traz os nomes das variáveis. Troque a senha antes de usar.
 
 Para derrubar tudo, use `docker compose down`. Para apagar também os dados, use `docker compose down -v`.
@@ -133,6 +135,10 @@ dotnet run --project src/Grana.Api
 ```
 
 O `dotnet tool restore` instala o `dotnet-ef` na versão do projeto. As migrations ficam em `src/Grana.Infrastructure/Migrations`.
+
+### Documentação
+
+Com a API rodando, a documentação interativa fica em `http://localhost:5180/scalar`, e o documento OpenAPI em `http://localhost:5180/openapi/v1.json`. Cada endpoint traz um exemplo de requisição, exemplos de resposta para cada código possível (200, 201, 204, 400, 404 e 409) e o esquema Bearer, que vai servir para as rotas autenticadas.
 
 ### Testes
 

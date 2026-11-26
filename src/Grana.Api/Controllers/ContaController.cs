@@ -8,9 +8,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+[Tags("Contas")]
 [Route("api/contas")]
 public sealed class ContaController(IContaService contaService) : ApiController
 {
+    [EndpointSummary("Cria uma conta")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPost]
     public async Task<IActionResult> CriarConta(ContaCriarDto contaCriar, CancellationToken cancellationToken)
     {
@@ -21,6 +26,8 @@ public sealed class ContaController(IContaService contaService) : ApiController
         return ResponderCriado(notificacao, nameof(ObterContaPorId), new { id = conta?.Id }, "Conta criada com sucesso.", MontarDetalhe(conta));
     }
 
+    [EndpointSummary("Lista as contas")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [HttpGet]
     public async Task<IActionResult> ListarContas([FromQuery] bool incluirInativas, CancellationToken cancellationToken)
     {
@@ -31,6 +38,9 @@ public sealed class ContaController(IContaService contaService) : ApiController
         return Responder(notificacao, 200, "Contas encontradas.", contas.Select(MontarItem).ToList());
     }
 
+    [EndpointSummary("Busca uma conta pelo id")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> ObterContaPorId(Guid id, CancellationToken cancellationToken)
     {
@@ -41,6 +51,11 @@ public sealed class ContaController(IContaService contaService) : ApiController
         return Responder(notificacao, 200, "Conta encontrada.", MontarDetalhe(conta));
     }
 
+    [EndpointSummary("Renomeia uma conta")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> RenomearConta(Guid id, ContaRenomearDto contaRenomear, CancellationToken cancellationToken)
     {
@@ -51,6 +66,11 @@ public sealed class ContaController(IContaService contaService) : ApiController
         return Responder(notificacao, 200, "Conta atualizada com sucesso.", MontarDetalhe(conta));
     }
 
+    [EndpointSummary("Desativa uma conta com saldo zero")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPatch("{id:guid}/desativar")]
     public async Task<IActionResult> DesativarConta(Guid id, CancellationToken cancellationToken)
     {
@@ -61,6 +81,11 @@ public sealed class ContaController(IContaService contaService) : ApiController
         return Responder(notificacao, 200, "Conta desativada com sucesso.", MontarDetalhe(conta));
     }
 
+    [EndpointSummary("Reativa uma conta desativada")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     [HttpPatch("{id:guid}/reativar")]
     public async Task<IActionResult> ReativarConta(Guid id, CancellationToken cancellationToken)
     {
