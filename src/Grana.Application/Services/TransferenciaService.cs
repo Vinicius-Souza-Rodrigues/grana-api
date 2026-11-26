@@ -5,7 +5,7 @@ using Grana.Domain.Notificacoes;
 
 namespace Application.Services;
 
-public sealed class TransferenciaService(ITransferenciaRepository transferenciaRepository, IContaRepository contaRepository) : ITransferenciaService
+public sealed class TransferenciaService(ITransferenciaRepository transferenciaRepository, IContaRepository contaRepository, IUnitOfWork unitOfWork) : ITransferenciaService
 {
     public async Task<Transferencia> CriarTransferencia(TransferenciaCriarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
     {
@@ -33,6 +33,7 @@ public sealed class TransferenciaService(ITransferenciaRepository transferenciaR
             return null;
 
         await transferenciaRepository.AdicionarTransferencia(transferencia, cancellationToken);
+        await unitOfWork.Salvar(cancellationToken);
 
         return transferencia;
     }
@@ -63,6 +64,7 @@ public sealed class TransferenciaService(ITransferenciaRepository transferenciaR
             return;
 
         await transferenciaRepository.RemoverTransferencia(transferencia, cancellationToken);
+        await unitOfWork.Salvar(cancellationToken);
     }
 
     public async Task<IReadOnlyList<Transferencia>> ListarTransferencias(TransferenciaListarDto dto, Notificacao notificacao, CancellationToken cancellationToken)

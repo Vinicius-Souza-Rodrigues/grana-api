@@ -1,50 +1,45 @@
 using Application.Interfaces;
 using Domain.Enums;
 using Domain.Models;
+using Infraestructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infraestructure.Repositories;
 
-public sealed class CategoriaRepository : ICategoriaRepository
+public sealed class CategoriaRepository(GranaDbContext contexto) : ICategoriaRepository
 {
-    private List<Categoria> _categorias = [];
-
-    public Task AdicionarCategoria(Categoria categoria, CancellationToken cancellationToken)
+    public async Task AdicionarCategoria(Categoria categoria, CancellationToken cancellationToken)
     {
-        _categorias.Add(categoria);
-
-        return Task.CompletedTask;
+        await contexto.Categorias.AddAsync(categoria, cancellationToken);
     }
 
     public Task<Categoria> ObterCategoriaPorId(Guid idCategoria, CancellationToken cancellationToken)
     {
-        var categoria = _categorias.Find(c => c.Id.Equals(idCategoria));
-
-        return Task.FromResult(categoria);
+        return contexto.Categorias.FirstOrDefaultAsync(c => c.Id == idCategoria, cancellationToken);
     }
 
     public Task<bool> ExisteCategoriaComNome(string nome, TipoCategoriaEnum tipoCategoria, Guid idCategoriaIgnorada, CancellationToken cancellationToken)
     {
-        var existe = _categorias.Exists(c =>
+        var nomeNormalizado = nome?.ToLower();
+
+        return contexto.Categorias.AnyAsync(c =>
             c.Id != idCategoriaIgnorada &&
             c.TipoCategoria == tipoCategoria &&
-            string.Equals(c.Nome, nome, StringComparison.OrdinalIgnoreCase));
-
-        return Task.FromResult(existe);
+            c.Nome.ToLower() == nomeNormalizado,
+            cancellationToken);
     }
 
-    public Task<IReadOnlyList<Categoria>> ListarCategorias(TipoCategoriaEnum? tipoCategoria, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Categoria>> ListarCategorias(TipoCategoriaEnum? tipoCategoria, CancellationToken cancellationToken)
     {
-        IReadOnlyList<Categoria> categorias = _categorias
-            .Where(c => tipoCategoria is null || c.TipoCategoria == tipoCategoria)
+        return await contexto.Categorias
+            .Where(c => tipoCategoria == null || c.TipoCategoria == tipoCategoria)
             .OrderBy(c => c.Nome)
-            .ToList();
-
-        return Task.FromResult(categorias);
+            .ToListAsync(cancellationToken);
     }
 
     public Task RemoverCategoria(Categoria categoria, CancellationToken cancellationToken)
     {
-        _categorias.Remove(categoria);
+        contexto.Categorias.Remove(categoria);
 
         return Task.CompletedTask;
     }

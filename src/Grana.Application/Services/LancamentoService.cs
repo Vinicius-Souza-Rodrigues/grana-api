@@ -7,7 +7,7 @@ using Grana.Domain.Notificacoes;
 
 namespace Application.Services;
 
-public sealed class LancamentoService(ILancamentoRepository lancamentoRepository, IContaRepository contaRepository, ICategoriaRepository categoriaRepository) : ILancamentoService
+public sealed class LancamentoService(ILancamentoRepository lancamentoRepository, IContaRepository contaRepository, ICategoriaRepository categoriaRepository, IUnitOfWork unitOfWork) : ILancamentoService
 {
     public async Task<Lancamento> CriarLancamento(LancamentoCriarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
     {
@@ -41,6 +41,7 @@ public sealed class LancamentoService(ILancamentoRepository lancamentoRepository
         categoria.VerificarOrcamento(totalDespesasNoMes + lancamento.Valor, notificacao);
 
         await lancamentoRepository.AdicionarLancamento(lancamento, cancellationToken);
+        await unitOfWork.Salvar(cancellationToken);
 
         return lancamento;
     }
@@ -102,6 +103,8 @@ public sealed class LancamentoService(ILancamentoRepository lancamentoRepository
         if (notificacao.TemNotificacoes)
             return null;
 
+        await unitOfWork.Salvar(cancellationToken);
+
         return lancamento;
     }
 
@@ -121,5 +124,6 @@ public sealed class LancamentoService(ILancamentoRepository lancamentoRepository
             return;
 
         await lancamentoRepository.RemoverLancamento(lancamento, cancellationToken);
+        await unitOfWork.Salvar(cancellationToken);
     }
 }

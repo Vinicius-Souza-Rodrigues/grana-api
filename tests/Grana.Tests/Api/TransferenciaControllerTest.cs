@@ -6,8 +6,10 @@ using Application.Services;
 using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
+using Infraestructure.Data;
 using Infraestructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Tests.Shared;
 
 namespace Tests.Api;
 
@@ -18,8 +20,9 @@ public sealed class TransferenciaControllerTest
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private readonly TransferenciaRepository _transferenciaRepositorio = new();
-    private readonly ContaRepository _contaRepositorio = new();
+    private readonly GranaDbContext _contexto = BancoEmMemoria.CriarContexto();
+    private readonly TransferenciaRepository _transferenciaRepositorio;
+    private readonly ContaRepository _contaRepositorio;
     private readonly TransferenciaController _controller;
     private readonly Conta _nubank = CriarConta("Nubank");
     private readonly Conta _inter = CriarConta("Inter");
@@ -27,7 +30,9 @@ public sealed class TransferenciaControllerTest
 
     public TransferenciaControllerTest()
     {
-        _controller = new TransferenciaController(new TransferenciaService(_transferenciaRepositorio, _contaRepositorio));
+        _transferenciaRepositorio = new TransferenciaRepository(_contexto);
+        _contaRepositorio = new ContaRepository(_contexto);
+        _controller = new TransferenciaController(new TransferenciaService(_transferenciaRepositorio, _contaRepositorio, new UnitOfWork(_contexto)));
     }
 
     [Fact]
@@ -68,6 +73,7 @@ public sealed class TransferenciaControllerTest
         var origem = await AdicionarConta("Origem", 100m);
         var destino = await AdicionarConta("Destino", 0m);
         destino.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.CriarTransferencia(new TransferenciaCriarDto(origem.Id, destino.Id, 300m, Hoje, null), CancellationToken.None));
 
@@ -103,6 +109,7 @@ public sealed class TransferenciaControllerTest
         var destino = await AdicionarConta("Destino", 500m);
         var id = await CriarTransferenciaPeloEndpoint(origem, destino, 300m);
         destino.Debitar(700m, new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.ExcluirTransferencia(id, CancellationToken.None));
 
@@ -260,6 +267,7 @@ public sealed class TransferenciaControllerTest
     {
         var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, saldo, new Notificacao());
         await _contaRepositorio.AdicionarConta(conta, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return conta;
     }
@@ -268,6 +276,7 @@ public sealed class TransferenciaControllerTest
     {
         var transferencia = Transferencia.CriacaoTransferencia(origem, destino, valor, data, descricao, new Notificacao());
         await _transferenciaRepositorio.AdicionarTransferencia(transferencia, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return transferencia;
     }

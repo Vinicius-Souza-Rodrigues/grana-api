@@ -2,7 +2,9 @@ using System.Text.Json.Serialization;
 using Application.Interfaces;
 using Application.Services;
 using Grana.Api.Middlewares;
+using Infraestructure.Data;
 using Infraestructure.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,14 +14,18 @@ builder.Services.AddControllers()
         o.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+builder.Services.AddDbContext<GranaDbContext>(o => o
+    .UseNpgsql(builder.Configuration.GetConnectionString("Grana"))
+    .UseSnakeCaseNamingConvention());
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IContaService, ContaService>();
-builder.Services.AddSingleton<IContaRepository, ContaRepository>();
+builder.Services.AddScoped<IContaRepository, ContaRepository>();
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
-builder.Services.AddSingleton<ICategoriaRepository, CategoriaRepository>();
+builder.Services.AddScoped<ICategoriaRepository, CategoriaRepository>();
 builder.Services.AddScoped<ILancamentoService, LancamentoService>();
-builder.Services.AddSingleton<ILancamentoRepository, LancamentoRepository>();
+builder.Services.AddScoped<ILancamentoRepository, LancamentoRepository>();
 builder.Services.AddScoped<ITransferenciaService, TransferenciaService>();
-builder.Services.AddSingleton<ITransferenciaRepository, TransferenciaRepository>();
+builder.Services.AddScoped<ITransferenciaRepository, TransferenciaRepository>();
 builder.Services.AddScoped<IOrcamentoService, OrcamentoService>();
 builder.Services.AddScoped<IResumoService, ResumoService>();
 builder.Services.AddScoped<IExtratoService, ExtratoService>();

@@ -5,6 +5,10 @@ namespace Domain.Models;
 
 public sealed class Categoria
 {
+    private Categoria()
+    {
+    }
+
     private Categoria(string nome, TipoCategoriaEnum tipoCategoria, decimal? orcamentoMensal)
     {
         Id = Guid.NewGuid();

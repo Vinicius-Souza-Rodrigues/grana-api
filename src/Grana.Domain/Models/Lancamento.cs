@@ -5,6 +5,10 @@ namespace Domain.Models;
 
 public sealed class Lancamento
 {
+    private Lancamento()
+    {
+    }
+
     private Lancamento(Conta conta, Categoria categoria, decimal valor, DateOnly data, string descricao)
     {
         Id = Guid.NewGuid();

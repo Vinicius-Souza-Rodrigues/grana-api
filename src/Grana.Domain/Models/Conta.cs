@@ -5,6 +5,10 @@ namespace Domain.Models;
 
 public sealed class Conta
 {
+    private Conta()
+    {
+    }
+
     private Conta(string nome, TipoContaEnum tipoConta, decimal saldo)
     {
         Id = Guid.NewGuid();

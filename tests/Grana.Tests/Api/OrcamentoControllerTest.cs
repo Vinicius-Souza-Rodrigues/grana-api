@@ -6,8 +6,10 @@ using Application.Services;
 using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
+using Infraestructure.Data;
 using Infraestructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Tests.Shared;
 
 namespace Tests.Api;
 
@@ -19,13 +21,16 @@ public sealed class OrcamentoControllerTest
         Converters = { new JsonStringEnumConverter() }
     };
 
-    private readonly CategoriaRepository _categoriaRepositorio = new();
-    private readonly LancamentoRepository _lancamentoRepositorio = new();
+    private readonly GranaDbContext _contexto = BancoEmMemoria.CriarContexto();
+    private readonly CategoriaRepository _categoriaRepositorio;
+    private readonly LancamentoRepository _lancamentoRepositorio;
     private readonly OrcamentoController _controller;
     private readonly Conta _conta = Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 10000m, new Notificacao());
 
     public OrcamentoControllerTest()
     {
+        _categoriaRepositorio = new CategoriaRepository(_contexto);
+        _lancamentoRepositorio = new LancamentoRepository(_contexto);
         _controller = new OrcamentoController(new OrcamentoService(_categoriaRepositorio, _lancamentoRepositorio));
     }
 
@@ -143,6 +148,7 @@ public sealed class OrcamentoControllerTest
     {
         var categoria = Categoria.CriacaoCategoria(nome, tipo, orcamentoMensal, new Notificacao());
         await _categoriaRepositorio.AdicionarCategoria(categoria, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return categoria;
     }
@@ -151,5 +157,6 @@ public sealed class OrcamentoControllerTest
     {
         var lancamento = Lancamento.CriacaoLancamento(_conta, categoria, valor, data, null, new Notificacao());
         await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
     }
 }

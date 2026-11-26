@@ -6,8 +6,10 @@ using Application.Services;
 using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
+using Infraestructure.Data;
 using Infraestructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Tests.Shared;
 
 namespace Tests.Api;
 
@@ -18,12 +20,14 @@ public sealed class ContaControllerTest
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private readonly ContaRepository _repositorio = new();
+    private readonly GranaDbContext _contexto = BancoEmMemoria.CriarContexto();
+    private readonly ContaRepository _repositorio;
     private readonly ContaController _controller;
 
     public ContaControllerTest()
     {
-        _controller = new ContaController(new ContaService(_repositorio));
+        _repositorio = new ContaRepository(_contexto);
+        _controller = new ContaController(new ContaService(_repositorio, new UnitOfWork(_contexto)));
     }
 
     private static JsonElement LerJson(ObjectResult resultado)
@@ -129,6 +133,7 @@ public sealed class ContaControllerTest
     {
         var conta = await AdicionarConta("Nubank");
         conta.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.RenomearConta(conta.Id, new ContaRenomearDto("Nubank PJ"), CancellationToken.None));
 
@@ -173,6 +178,7 @@ public sealed class ContaControllerTest
     {
         var conta = await AdicionarConta("Nubank");
         conta.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.DesativarConta(conta.Id, CancellationToken.None));
 
@@ -185,6 +191,7 @@ public sealed class ContaControllerTest
     {
         var conta = await AdicionarConta("Nubank");
         conta.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.ReativarConta(conta.Id, CancellationToken.None));
 
@@ -197,6 +204,7 @@ public sealed class ContaControllerTest
     {
         var conta = await AdicionarConta("Nubank");
         conta.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
         await AdicionarConta("nubank");
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.ReativarConta(conta.Id, CancellationToken.None));
@@ -219,6 +227,7 @@ public sealed class ContaControllerTest
         var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, saldo, new Notificacao());
 
         await _repositorio.AdicionarConta(conta, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return conta;
     }
@@ -231,5 +240,6 @@ public sealed class ContaControllerTest
         await _repositorio.AdicionarConta(Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100, new Notificacao()), CancellationToken.None);
         await _repositorio.AdicionarConta(Conta.CriacaoConta("Inter", TipoContaEnum.Poupanca, 50, new Notificacao()), CancellationToken.None);
         await _repositorio.AdicionarConta(inativa, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
     }
 }

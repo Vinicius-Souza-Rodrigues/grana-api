@@ -6,8 +6,10 @@ using Application.Services;
 using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
+using Infraestructure.Data;
 using Infraestructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Tests.Shared;
 
 namespace Tests.Api;
 
@@ -18,14 +20,18 @@ public sealed class LancamentoControllerTest
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private readonly LancamentoRepository _lancamentoRepositorio = new();
-    private readonly ContaRepository _contaRepositorio = new();
-    private readonly CategoriaRepository _categoriaRepositorio = new();
+    private readonly GranaDbContext _contexto = BancoEmMemoria.CriarContexto();
+    private readonly LancamentoRepository _lancamentoRepositorio;
+    private readonly ContaRepository _contaRepositorio;
+    private readonly CategoriaRepository _categoriaRepositorio;
     private readonly LancamentoController _controller;
 
     public LancamentoControllerTest()
     {
-        _controller = new LancamentoController(new LancamentoService(_lancamentoRepositorio, _contaRepositorio, _categoriaRepositorio));
+        _lancamentoRepositorio = new LancamentoRepository(_contexto);
+        _contaRepositorio = new ContaRepository(_contexto);
+        _categoriaRepositorio = new CategoriaRepository(_contexto);
+        _controller = new LancamentoController(new LancamentoService(_lancamentoRepositorio, _contaRepositorio, _categoriaRepositorio, new UnitOfWork(_contexto)));
     }
 
     private static DateOnly Hoje => DateOnly.FromDateTime(DateTime.UtcNow);
@@ -82,6 +88,7 @@ public sealed class LancamentoControllerTest
     {
         var conta = await CriarConta(0m);
         conta.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
         var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.CriarLancamento(new LancamentoCriarDto(conta.Id, categoria.Id, 0m, Hoje.AddDays(1), null), CancellationToken.None));
@@ -393,7 +400,9 @@ public sealed class LancamentoControllerTest
         var categoria = await CriarCategoria("Salário", TipoCategoriaEnum.Receita, null);
         var id = await CriarLancamentoPeloEndpoint(conta, categoria, 50m);
         conta.Debitar(150m, new Notificacao());
+        await _contexto.SaveChangesAsync();
         conta.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.EditarLancamento(id, new LancamentoEditarDto(categoria.Id, 80m, Hoje, null), CancellationToken.None));
 
@@ -492,6 +501,7 @@ public sealed class LancamentoControllerTest
         var categoria = await CriarCategoria("Mercado", TipoCategoriaEnum.Despesa, null);
         var id = await CriarLancamentoPeloEndpoint(conta, categoria, 50m);
         conta.Desativar(new Notificacao());
+        await _contexto.SaveChangesAsync();
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.ExcluirLancamento(id, CancellationToken.None));
 
@@ -523,6 +533,7 @@ public sealed class LancamentoControllerTest
     {
         var lancamento = Lancamento.CriacaoLancamento(conta, categoria, valor, data, descricao, new Notificacao());
         await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return lancamento;
     }
@@ -531,6 +542,7 @@ public sealed class LancamentoControllerTest
     {
         var conta = Conta.CriacaoConta(nome, TipoContaEnum.Corrente, saldo, new Notificacao());
         await _contaRepositorio.AdicionarConta(conta, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return conta;
     }
@@ -539,6 +551,7 @@ public sealed class LancamentoControllerTest
     {
         var categoria = Categoria.CriacaoCategoria(nome, tipo, orcamentoMensal, new Notificacao());
         await _categoriaRepositorio.AdicionarCategoria(categoria, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         return categoria;
     }

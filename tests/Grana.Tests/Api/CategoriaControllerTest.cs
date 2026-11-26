@@ -6,8 +6,10 @@ using Application.Services;
 using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
+using Infraestructure.Data;
 using Infraestructure.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using Tests.Shared;
 
 namespace Tests.Api;
 
@@ -18,13 +20,16 @@ public sealed class CategoriaControllerTest
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private readonly CategoriaRepository _categoriaRepositorio = new();
-    private readonly LancamentoRepository _lancamentoRepositorio = new();
+    private readonly GranaDbContext _contexto = BancoEmMemoria.CriarContexto();
+    private readonly CategoriaRepository _categoriaRepositorio;
+    private readonly LancamentoRepository _lancamentoRepositorio;
     private readonly CategoriaController _controller;
 
     public CategoriaControllerTest()
     {
-        _controller = new CategoriaController(new CategoriaService(_categoriaRepositorio, _lancamentoRepositorio));
+        _categoriaRepositorio = new CategoriaRepository(_contexto);
+        _lancamentoRepositorio = new LancamentoRepository(_contexto);
+        _controller = new CategoriaController(new CategoriaService(_categoriaRepositorio, _lancamentoRepositorio, new UnitOfWork(_contexto)));
     }
 
     private static JsonElement LerJson(ObjectResult resultado)
@@ -240,6 +245,7 @@ public sealed class CategoriaControllerTest
         var categoria = await _categoriaRepositorio.ObterCategoriaPorId(id, CancellationToken.None);
         var lancamento = Lancamento.CriacaoLancamento(Conta.CriacaoConta("Nubank", TipoContaEnum.Corrente, 100m, new Notificacao()), categoria, 50, DateOnly.FromDateTime(DateTime.UtcNow), null, new Notificacao());
         await _lancamentoRepositorio.AdicionarLancamento(lancamento, CancellationToken.None);
+        await _contexto.SaveChangesAsync();
 
         var resultado = Assert.IsType<ObjectResult>(await _controller.ExcluirCategoria(id, CancellationToken.None));
 

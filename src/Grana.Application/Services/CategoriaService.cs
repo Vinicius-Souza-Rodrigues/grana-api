@@ -6,7 +6,7 @@ using Grana.Domain.Notificacoes;
 
 namespace Application.Services;
 
-public sealed class CategoriaService(ICategoriaRepository categoriaRepository, ILancamentoRepository lancamentoRepository) : ICategoriaService
+public sealed class CategoriaService(ICategoriaRepository categoriaRepository, ILancamentoRepository lancamentoRepository, IUnitOfWork unitOfWork) : ICategoriaService
 {
     public async Task<Categoria> CriarCategoria(CategoriaCriarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
     {
@@ -24,6 +24,7 @@ public sealed class CategoriaService(ICategoriaRepository categoriaRepository, I
         }
 
         await categoriaRepository.AdicionarCategoria(categoria, cancellationToken);
+        await unitOfWork.Salvar(cancellationToken);
 
         return categoria;
     }
@@ -73,6 +74,8 @@ public sealed class CategoriaService(ICategoriaRepository categoriaRepository, I
         if (notificacao.TemNotificacoes)
             return null;
 
+        await unitOfWork.Salvar(cancellationToken);
+
         return categoria;
     }
 
@@ -94,5 +97,6 @@ public sealed class CategoriaService(ICategoriaRepository categoriaRepository, I
             return;
 
         await categoriaRepository.RemoverCategoria(categoria, cancellationToken);
+        await unitOfWork.Salvar(cancellationToken);
     }
 }
