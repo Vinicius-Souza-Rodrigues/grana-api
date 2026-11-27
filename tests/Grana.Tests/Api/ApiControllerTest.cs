@@ -57,6 +57,19 @@ public sealed class ApiControllerTest
     }
 
     [Fact]
+    public void ResponderNaoAutorizado()
+    {
+        _notificacao.AdicionarNaoAutorizado("E-mail ou senha inválidos.");
+
+        var resultado = Assert.IsType<ObjectResult>(_controller.ChamarResponder(_notificacao, 200, "Ok"));
+        var json = LerJson(resultado);
+
+        Assert.Equal(401, resultado.StatusCode);
+        Assert.Equal(401, json.GetProperty("codigo").GetInt32());
+        Assert.Equal("E-mail ou senha inválidos.", json.GetProperty("erros")[0].GetString());
+    }
+
+    [Fact]
     public void ResponderConflito()
     {
         _notificacao.AdicionarConflito("Já existe uma conta com esse nome.");

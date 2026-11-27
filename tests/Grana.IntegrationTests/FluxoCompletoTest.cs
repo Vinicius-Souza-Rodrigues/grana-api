@@ -7,8 +7,16 @@ namespace IntegrationTests;
 public sealed class FluxoCompletoTest(GranaApiFactory factory) : TesteDeIntegracao(factory)
 {
     [Fact]
-    public async Task CriarContasLancarTransferirEConsultarOExtrato()
+    public async Task RegistrarLogarCriarContasLancarTransferirEConsultarOExtrato()
     {
+        Cliente.DefaultRequestHeaders.Authorization = null;
+
+        var semToken = await Cliente.GetAsync("api/contas");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, semToken.StatusCode);
+
+        await Autenticar(Cliente, "maria@email.com");
+
         var nubank = await CriarConta("Nubank", 1000m);
         var inter = await CriarConta("Inter", 0m);
         var salario = await CriarCategoria("Salário", "Receita");

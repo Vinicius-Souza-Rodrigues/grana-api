@@ -286,6 +286,18 @@ public static class ExemplosOpenApi
                 [409] = Erro(409, "Já existe um usuário com esse e-mail.")
             }),
 
+        [nameof(AuthController.Login)] = new(
+            new { email = "maria@email.com", senha = "senhaForte123" },
+            new Dictionary<int, object>
+            {
+                [200] = Sucesso(200, "Login realizado com sucesso.", new
+                {
+                    token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4YzNmMWE2ZC05YjJlLTRkN2EtYjFjNS00ZThhMmY2ZDljM2IifQ.assinatura",
+                    expiraEm = "2026-11-20T16:32:10Z"
+                }),
+                [401] = Erro(401, "E-mail ou senha inválidos.")
+            }),
+
         [nameof(ResumoController.ObterResumoMensal)] = new(
             null,
             new Dictionary<int, object>

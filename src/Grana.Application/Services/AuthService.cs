@@ -5,8 +5,20 @@ using Grana.Domain.Notificacoes;
 
 namespace Application.Services;
 
-public sealed class AuthService(IUsuarioRepository usuarioRepository, IHashSenha hashSenha, IUnitOfWork unitOfWork) : IAuthService
+public sealed class AuthService(IUsuarioRepository usuarioRepository, IHashSenha hashSenha, IGeradorToken geradorToken, IUnitOfWork unitOfWork) : IAuthService
 {
+    public async Task<TokenAcesso> Login(UsuarioLoginDto dto, Notificacao notificacao, CancellationToken cancellationToken)
+    {
+        var usuario = await usuarioRepository.ObterUsuarioPorEmail(dto.email, cancellationToken);
+
+        Usuario.ValidarCredenciais(usuario, dto.senha, hashSenha.Verificar, notificacao);
+
+        if (notificacao.TemNotificacoes)
+            return null;
+
+        return geradorToken.Gerar(usuario);
+    }
+
     public async Task<Usuario> Registrar(UsuarioRegistrarDto dto, Notificacao notificacao, CancellationToken cancellationToken)
     {
         var usuario = Usuario.CriacaoUsuario(dto.nome, dto.email, dto.senha, hashSenha.Gerar, notificacao);

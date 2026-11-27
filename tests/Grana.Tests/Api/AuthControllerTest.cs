@@ -8,6 +8,7 @@ using Infraestructure.Repositories;
 using Infraestructure.Seguranca;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Tests.Shared;
 
 namespace Tests.Api;
@@ -25,7 +26,59 @@ public sealed class AuthControllerTest
 
     public AuthControllerTest()
     {
-        _controller = new AuthController(new AuthService(new UsuarioRepository(_contexto), _hashSenha, new UnitOfWork(_contexto)));
+        var configuracaoJwt = new ConfiguracaoJwt { Chave = "chave-de-teste-com-mais-de-32-caracteres", Emissor = "grana-api", Audiencia = "grana-api" };
+        var geradorToken = new GeradorToken(Options.Create(configuracaoJwt), TimeProvider.System);
+
+        _controller = new AuthController(new AuthService(new UsuarioRepository(_contexto), _hashSenha, geradorToken, new UnitOfWork(_contexto)));
+    }
+
+    private async Task RegistrarMaria()
+        => await _controller.Registrar(new UsuarioRegistrarDto("Maria Silva", "maria@email.com", "senhaForte123"), CancellationToken.None);
+
+    [Fact]
+    public async Task LoginComCredenciaisCorretas()
+    {
+        await RegistrarMaria();
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.Login(new UsuarioLoginDto("maria@email.com", "senhaForte123"), CancellationToken.None));
+        var dados = LerJson(resultado).GetProperty("dados");
+        var expiraEm = dados.GetProperty("expiraEm").GetDateTime();
+
+        Assert.Equal(200, resultado.StatusCode);
+        Assert.False(string.IsNullOrWhiteSpace(dados.GetProperty("token").GetString()));
+        Assert.InRange(expiraEm, DateTime.UtcNow.AddHours(2).AddMinutes(-1), DateTime.UtcNow.AddHours(2).AddMinutes(1));
+    }
+
+    [Fact]
+    public async Task LoginComEmailEmMaiusculas()
+    {
+        await RegistrarMaria();
+
+        var resultado = Assert.IsType<ObjectResult>(await _controller.Login(new UsuarioLoginDto(" MARIA@Email.com ", "senhaForte123"), CancellationToken.None));
+
+        Assert.Equal(200, resultado.StatusCode);
+    }
+
+    [Fact]
+    public async Task SenhaErradaEEmailInexistenteRecebem401ComAMesmaMensagem()
+    {
+        await RegistrarMaria();
+
+        var senhaErrada = Assert.IsType<ObjectResult>(await _controller.Login(new UsuarioLoginDto("maria@email.com", "senhaErrada123"), CancellationToken.None));
+        var emailInexistente = Assert.IsType<ObjectResult>(await _controller.Login(new UsuarioLoginDto("joao@email.com", "senhaForte123"), CancellationToken.None));
+
+        Assert.Equal(401, senhaErrada.StatusCode);
+        Assert.Equal(401, emailInexistente.StatusCode);
+        Assert.Equal("E-mail ou senha inválidos.", LerJson(senhaErrada).GetProperty("erros")[0].GetString());
+        Assert.Equal(JsonSerializer.Serialize(senhaErrada.Value), JsonSerializer.Serialize(emailInexistente.Value));
+    }
+
+    [Fact]
+    public async Task LoginSemEmailESenha()
+    {
+        var resultado = Assert.IsType<ObjectResult>(await _controller.Login(new UsuarioLoginDto(null, null), CancellationToken.None));
+
+        Assert.Equal(401, resultado.StatusCode);
     }
 
     private static JsonElement LerJson(ObjectResult resultado)

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Application.Interfaces;
 using Application.Services;
+using Grana.Api.Autenticacao;
 using Grana.Api.Middlewares;
 using Grana.Api.OpenApi;
 using Infraestructure.Data;
@@ -35,12 +36,16 @@ builder.Services.AddScoped<IExtratoService, ExtratoService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddSingleton<IHashSenha, HashSenha>();
+builder.Services.AddSingleton<IGeradorToken, GeradorToken>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AdicionarAutenticacaoJwt(builder.Configuration);
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<GranaDbContext>();
 builder.Services.AddOpenApi(o =>
 {
     o.AddDocumentTransformer<DocumentoOpenApiTransformer>();
     o.AddOperationTransformer<ExemplosOpenApiTransformer>();
+    o.AddOperationTransformer<SegurancaOpenApiTransformer>();
 });
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<TratadorDeExcecoes>();
@@ -56,15 +61,16 @@ if (app.Environment.IsDevelopment() && app.Configuration.GetValue<bool>("SeedDem
     await seedDemo.Executar(DateOnly.FromDateTime(DateTime.UtcNow), CancellationToken.None);
 }
 
-app.MapOpenApi();
-app.MapScalarApiReference();
-
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapOpenApi().AllowAnonymous();
+app.MapScalarApiReference().AllowAnonymous();
 
 app.MapControllers();
 
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

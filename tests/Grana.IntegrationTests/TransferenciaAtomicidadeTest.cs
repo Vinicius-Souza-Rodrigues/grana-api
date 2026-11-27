@@ -18,6 +18,7 @@ public sealed class TransferenciaAtomicidadeTest(GranaApiFactory factory) : Test
         using var factoryComFalha = Factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
             s.ConfigureDbContext<GranaDbContext>(o => o.AddInterceptors(new FalhaAoGravarTransferencia()))));
         using var clienteComFalha = factoryComFalha.CreateClient();
+        clienteComFalha.DefaultRequestHeaders.Authorization = Cliente.DefaultRequestHeaders.Authorization;
 
         var resposta = await clienteComFalha.PostAsJsonAsync("api/transferencias", new { contaOrigemId = origem, contaDestinoId = destino, valor = 300m, data = Hoje, descricao = (string)null });
 

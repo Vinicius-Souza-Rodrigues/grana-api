@@ -7,4 +7,6 @@ namespace Application.Interfaces;
 public interface IAuthService
 {
     Task<Usuario> Registrar(UsuarioRegistrarDto dto, Notificacao notificacao, CancellationToken cancellationToken);
+
+    Task<TokenAcesso> Login(UsuarioLoginDto dto, Notificacao notificacao, CancellationToken cancellationToken);
 }

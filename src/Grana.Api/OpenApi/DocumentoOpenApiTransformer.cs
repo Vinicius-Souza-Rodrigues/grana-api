@@ -22,12 +22,6 @@ public sealed class DocumentoOpenApiTransformer : IOpenApiDocumentTransformer
             Description = "Token JWT obtido no login."
         };
 
-        document.Security ??= [];
-        document.Security.Add(new OpenApiSecurityRequirement
-        {
-            [new OpenApiSecuritySchemeReference(EsquemaBearer, document)] = []
-        });
-
         return Task.CompletedTask;
     }
 }
