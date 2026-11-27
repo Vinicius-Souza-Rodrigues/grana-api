@@ -15,7 +15,7 @@ public sealed class DocumentacaoOpenApiTest(GranaApiFactory factory) : TesteDeIn
     {
         var operacoes = ListarOperacoes(await ObterDocumento()).ToList();
 
-        Assert.Equal(23, operacoes.Count);
+        Assert.Equal(24, operacoes.Count);
 
         foreach (var (rota, operacao) in operacoes)
         {
@@ -43,6 +43,7 @@ public sealed class DocumentacaoOpenApiTest(GranaApiFactory factory) : TesteDeIn
         Assert.Equal(["200", "404"], Codigos(caminhos, "/api/contas/{id}", "get"));
         Assert.Equal(["204", "400", "404"], Codigos(caminhos, "/api/categorias/{id}", "delete"));
         Assert.Equal(["200", "400", "404"], Codigos(caminhos, "/api/contas/{id}/extrato", "get"));
+        Assert.Equal(["201", "400", "409"], Codigos(caminhos, "/api/auth/registrar", "post"));
     }
 
     [Fact]

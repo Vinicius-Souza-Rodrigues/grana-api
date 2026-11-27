@@ -15,6 +15,7 @@ public static class ExemplosOpenApi
     private static readonly Guid IdSalario = Guid.Parse("e9b3d6a1-4c7f-4e2a-8b5d-6a1c3f9e7b2d");
     private static readonly Guid IdLancamento = Guid.Parse("1d8f4a7c-3e9b-4c2d-a6f1-8b4e2c7a9d5f");
     private static readonly Guid IdTransferencia = Guid.Parse("5b2e9c4a-7d1f-4a8b-9e3c-2f6a8d1b4c7e");
+    private static readonly Guid IdUsuario = Guid.Parse("8c3f1a6d-9b2e-4d7a-b1c5-4e8a2f6d9c3b");
 
     private const string Data = "2026-11-20";
     private const string CriadoEm = "2026-11-20T14:32:10Z";
@@ -274,6 +275,15 @@ public static class ExemplosOpenApi
                     }
                 }),
                 [400] = Erro(400, "O mês deve estar entre 1 e 12.")
+            }),
+
+        [nameof(AuthController.Registrar)] = new(
+            new { nome = "Maria Silva", email = "maria@email.com", senha = "senhaForte123" },
+            new Dictionary<int, object>
+            {
+                [201] = Sucesso(201, "Usuário registrado com sucesso.", new { id = IdUsuario, nome = "Maria Silva", email = "maria@email.com", criadoEm = CriadoEm }),
+                [400] = Erro(400, "O nome passado é inválido, não pode ser nulo.", "A senha deve ter no mínimo 8 caracteres, com pelo menos uma letra e um número."),
+                [409] = Erro(409, "Já existe um usuário com esse e-mail.")
             }),
 
         [nameof(ResumoController.ObterResumoMensal)] = new(

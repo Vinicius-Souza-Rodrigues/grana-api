@@ -10,6 +10,7 @@ public sealed class GranaDbContext(DbContextOptions<GranaDbContext> options) : D
     public DbSet<Categoria> Categorias => Set<Categoria>();
     public DbSet<Lancamento> Lancamentos => Set<Lancamento>();
     public DbSet<Transferencia> Transferencias => Set<Transferencia>();
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {

@@ -5,6 +5,7 @@ using Grana.Api.Middlewares;
 using Grana.Api.OpenApi;
 using Infraestructure.Data;
 using Infraestructure.Repositories;
+using Infraestructure.Seguranca;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -31,6 +32,9 @@ builder.Services.AddScoped<ITransferenciaRepository, TransferenciaRepository>();
 builder.Services.AddScoped<IOrcamentoService, OrcamentoService>();
 builder.Services.AddScoped<IResumoService, ResumoService>();
 builder.Services.AddScoped<IExtratoService, ExtratoService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+builder.Services.AddSingleton<IHashSenha, HashSenha>();
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<GranaDbContext>();
 builder.Services.AddOpenApi(o =>

@@ -13,6 +13,17 @@
 
 GET {{Grana.Api_HostAddress}}/health
 
+### Autenticação: registrar usuário
+
+POST {{Grana.Api_HostAddress}}/api/auth/registrar
+Content-Type: application/json
+
+{
+  "nome": "Maria Silva",
+  "email": "maria@email.com",
+  "senha": "senhaForte123"
+}
+
 ### Contas: criar conta de origem
 
 # @name criarConta

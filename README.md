@@ -18,6 +18,7 @@ O objetivo do projeto é praticar regras de negócio bem feitas. Quem decide se 
 
 ## O que a API faz
 
+- **Usuários:** cadastro com nome, e-mail único e senha guardada só como hash.
 - **Contas:** corrente, poupança ou carteira, com saldo inicial.
 - **Categorias:** de receita ou de despesa, com orçamento mensal opcional.
 - **Lançamentos:** entradas e saídas que atualizam o saldo da conta.
@@ -72,6 +73,7 @@ flowchart LR
 - **Erros inesperados tratados em um lugar só**, com um `IExceptionHandler` que grava o detalhe no log.
 - **Unit of Work para salvar.** Os services alteram as entidades e chamam `Salvar` uma vez no fim. Uma transferência grava as duas contas e o registro num único `SaveChanges`, então ou tudo é salvo ou nada é. Se o domínio devolver erro, nada é salvo.
 - **Concorrência otimista na conta.** A `Conta` tem uma coluna `versao` que muda a cada alteração salva. Se duas operações carregam a mesma conta e as duas tentam salvar, só a primeira passa. A outra recebe 409 e nada dela é gravado, então dois débitos simultâneos não deixam o saldo negativo.
+- **Senha só como hash.** O domínio valida a senha e recebe o hash pronto, sem conhecer o algoritmo. O hash é gerado pelo `PasswordHasher<T>` do ASP.NET Core Identity (PBKDF2 com salt), e a senha nunca aparece na resposta nem no banco.
 - **Índices no banco.** Conta ativa com nome único, categoria única por tipo e nome, e índice na data dos lançamentos. Os services já validam isso, mas o banco garante a regra mesmo com requisições simultâneas.
 
 ---
