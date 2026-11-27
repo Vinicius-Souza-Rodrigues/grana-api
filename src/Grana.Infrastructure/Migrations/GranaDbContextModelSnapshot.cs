@@ -198,6 +198,43 @@ namespace Grana.Infrastructure.Migrations
                     b.ToTable("transferencias", (string)null);
                 });
 
+            modelBuilder.Entity("Domain.Models.Usuario", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("SenhaHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("senha_hash");
+
+                    b.HasKey("Id")
+                        .HasName("pk_usuarios");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_usuarios_email");
+
+                    b.ToTable("usuarios", (string)null);
+                });
+
             modelBuilder.Entity("Domain.Models.Lancamento", b =>
                 {
                     b.HasOne("Domain.Models.Categoria", "Categoria")
