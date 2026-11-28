@@ -15,7 +15,7 @@ public sealed class DocumentacaoOpenApiTest(GranaApiFactory factory) : TesteDeIn
     {
         var operacoes = ListarOperacoes(await ObterDocumento()).ToList();
 
-        Assert.Equal(24, operacoes.Count);
+        Assert.Equal(25, operacoes.Count);
 
         foreach (var (rota, operacao) in operacoes)
         {
@@ -39,11 +39,12 @@ public sealed class DocumentacaoOpenApiTest(GranaApiFactory factory) : TesteDeIn
     {
         var caminhos = (await ObterDocumento()).GetProperty("paths");
 
-        Assert.Equal(["201", "400", "404", "409"], Codigos(caminhos, "/api/lancamentos", "post"));
-        Assert.Equal(["200", "404"], Codigos(caminhos, "/api/contas/{id}", "get"));
-        Assert.Equal(["204", "400", "404"], Codigos(caminhos, "/api/categorias/{id}", "delete"));
-        Assert.Equal(["200", "400", "404"], Codigos(caminhos, "/api/contas/{id}/extrato", "get"));
+        Assert.Equal(["201", "400", "401", "404", "409"], Codigos(caminhos, "/api/lancamentos", "post"));
+        Assert.Equal(["200", "401", "404"], Codigos(caminhos, "/api/contas/{id}", "get"));
+        Assert.Equal(["204", "400", "401", "404"], Codigos(caminhos, "/api/categorias/{id}", "delete"));
+        Assert.Equal(["200", "400", "401", "404"], Codigos(caminhos, "/api/contas/{id}/extrato", "get"));
         Assert.Equal(["201", "400", "409"], Codigos(caminhos, "/api/auth/registrar", "post"));
+        Assert.Equal(["200", "401"], Codigos(caminhos, "/api/auth/login", "post"));
     }
 
     [Fact]
@@ -55,7 +56,20 @@ public sealed class DocumentacaoOpenApiTest(GranaApiFactory factory) : TesteDeIn
         Assert.Equal("http", bearer.GetProperty("type").GetString());
         Assert.Equal("bearer", bearer.GetProperty("scheme").GetString());
         Assert.Equal("JWT", bearer.GetProperty("bearerFormat").GetString());
-        Assert.True(documento.GetProperty("security")[0].TryGetProperty("Bearer", out _));
+    }
+
+    [Fact]
+    public async Task SoAsRotasProtegidasPedemBearer()
+    {
+        var operacoes = ListarOperacoes(await ObterDocumento()).ToList();
+        var publicas = new[] { "POST /api/auth/registrar", "POST /api/auth/login" };
+
+        foreach (var (rota, operacao) in operacoes)
+        {
+            var pedeBearer = operacao.TryGetProperty("security", out var seguranca) && seguranca[0].TryGetProperty("Bearer", out _);
+
+            Assert.Equal(!publicas.Contains(rota), pedeBearer);
+        }
     }
 
     [Fact]

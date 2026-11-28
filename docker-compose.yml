@@ -30,6 +30,7 @@ services:
       target: final
     environment:
       ConnectionStrings__Grana: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Jwt__Chave: ${JWT_CHAVE:?Defina JWT_CHAVE no .env}
     ports:
       - "8080:8080"
     depends_on:

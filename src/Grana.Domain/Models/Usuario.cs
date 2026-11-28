@@ -52,6 +52,14 @@ public sealed partial class Usuario
         return new Usuario(nome, email, gerarHashSenha(senha));
     }
 
+    public static void ValidarCredenciais(Usuario usuario, string senha, Func<string, string, bool> verificarSenha, Notificacao notificacao)
+    {
+        var senhaConfere = verificarSenha(usuario?.SenhaHash, senha);
+
+        if (usuario is null || !senhaConfere)
+            notificacao.AdicionarNaoAutorizado("E-mail ou senha inválidos.");
+    }
+
     public static string NormalizarEmail(string email) => email?.Trim().ToLowerInvariant();
 
     private static bool SenhaValida(string senha)

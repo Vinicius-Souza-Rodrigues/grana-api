@@ -29,5 +29,11 @@ public sealed class Notificacao
         _notificacoes.Add(notificacao);
     }
 
+    public void AdicionarNaoAutorizado(string notificacao)
+    {
+        Tipo = TipoNotificacaoEnum.NaoAutorizado;
+        _notificacoes.Add(notificacao);
+    }
+
     public void AdicionarAviso(string aviso) => _avisos.Add(aviso);
 }

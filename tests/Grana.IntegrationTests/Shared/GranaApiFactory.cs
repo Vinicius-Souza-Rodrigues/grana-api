@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Infraestructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -15,6 +16,8 @@ public sealed class GranaApiFactory : WebApplicationFactory<Program>, IAsyncLife
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17").Build();
     private NpgsqlConnection _conexao;
     private Respawner _respawner;
+
+    public string ChaveJwt { get; } = Convert.ToBase64String(RandomNumberGenerator.GetBytes(48));
 
     public async Task InitializeAsync()
     {
@@ -47,5 +50,6 @@ public sealed class GranaApiFactory : WebApplicationFactory<Program>, IAsyncLife
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Grana", _postgres.GetConnectionString());
+        builder.UseSetting("Jwt:Chave", ChaveJwt);
     }
 }

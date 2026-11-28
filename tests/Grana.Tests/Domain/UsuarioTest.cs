@@ -1,3 +1,4 @@
+using Domain.Enums;
 using Domain.Models;
 using Grana.Domain.Notificacoes;
 
@@ -118,6 +119,45 @@ public sealed class UsuarioTest
         var usuario = Usuario.CriacaoUsuario("Maria Silva", "maria@email.com", "abcdefg1", GerarHash, _notificacao);
 
         Assert.NotNull(usuario);
+    }
+
+    [Fact]
+    public void CredenciaisCorretas()
+    {
+        var usuario = Usuario.CriacaoUsuario("Maria Silva", "maria@email.com", "senhaForte123", GerarHash, new Notificacao());
+
+        Usuario.ValidarCredenciais(usuario, "senhaForte123", (hash, senha) => hash == GerarHash(senha), _notificacao);
+
+        Assert.False(_notificacao.TemNotificacoes);
+    }
+
+    [Fact]
+    public void SenhaErradaEUsuarioInexistenteTemAMesmaMensagem()
+    {
+        var usuario = Usuario.CriacaoUsuario("Maria Silva", "maria@email.com", "senhaForte123", GerarHash, new Notificacao());
+        var notificacaoUsuarioInexistente = new Notificacao();
+
+        Usuario.ValidarCredenciais(usuario, "senhaErrada123", (hash, senha) => hash == GerarHash(senha), _notificacao);
+        Usuario.ValidarCredenciais(null, "senhaForte123", (hash, senha) => hash == GerarHash(senha), notificacaoUsuarioInexistente);
+
+        Assert.Equal(["E-mail ou senha inválidos."], _notificacao.Notificacoes);
+        Assert.Equal(_notificacao.Notificacoes, notificacaoUsuarioInexistente.Notificacoes);
+        Assert.Equal(TipoNotificacaoEnum.NaoAutorizado, _notificacao.Tipo);
+        Assert.Equal(TipoNotificacaoEnum.NaoAutorizado, notificacaoUsuarioInexistente.Tipo);
+    }
+
+    [Fact]
+    public void UsuarioInexistenteTambemPassaPelaVerificacaoDeSenha()
+    {
+        var verificou = false;
+
+        Usuario.ValidarCredenciais(null, "senhaForte123", (hash, senha) =>
+        {
+            verificou = true;
+            return false;
+        }, _notificacao);
+
+        Assert.True(verificou);
     }
 
     [Fact]

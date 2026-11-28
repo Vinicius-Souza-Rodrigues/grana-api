@@ -8,6 +8,7 @@
 @categoriaSemUsoId = {{criarCategoriaSemUso.response.body.$.dados.id}}
 @lancamentoId = {{criarLancamento.response.body.$.dados.lancamento.id}}
 @transferenciaId = {{criarTransferencia.response.body.$.dados.transferencia.id}}
+@token = {{login.response.body.$.dados.token}}
 
 ### Health check
 
@@ -24,10 +25,22 @@ Content-Type: application/json
   "senha": "senhaForte123"
 }
 
+### Autenticação: login (o token vai para as próximas requisições)
+
+# @name login
+POST {{Grana.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "maria@email.com",
+  "senha": "senhaForte123"
+}
+
 ### Contas: criar conta de origem
 
 # @name criarConta
 POST {{Grana.Api_HostAddress}}/api/contas
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -40,6 +53,7 @@ Content-Type: application/json
 
 # @name criarContaDestino
 POST {{Grana.Api_HostAddress}}/api/contas
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -52,6 +66,7 @@ Content-Type: application/json
 
 # @name criarContaVazia
 POST {{Grana.Api_HostAddress}}/api/contas
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -63,18 +78,22 @@ Content-Type: application/json
 ### Contas: listar ativas
 
 GET {{Grana.Api_HostAddress}}/api/contas
+Authorization: Bearer {{token}}
 
 ### Contas: listar incluindo inativas
 
 GET {{Grana.Api_HostAddress}}/api/contas?incluirInativas=true
+Authorization: Bearer {{token}}
 
 ### Contas: buscar por id
 
 GET {{Grana.Api_HostAddress}}/api/contas/{{contaId}}
+Authorization: Bearer {{token}}
 
 ### Contas: renomear
 
 PUT {{Grana.Api_HostAddress}}/api/contas/{{contaId}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -84,15 +103,18 @@ Content-Type: application/json
 ### Contas: desativar (só com saldo zero)
 
 PATCH {{Grana.Api_HostAddress}}/api/contas/{{contaVaziaId}}/desativar
+Authorization: Bearer {{token}}
 
 ### Contas: reativar
 
 PATCH {{Grana.Api_HostAddress}}/api/contas/{{contaVaziaId}}/reativar
+Authorization: Bearer {{token}}
 
 ### Categorias: criar de despesa com orçamento
 
 # @name criarCategoriaDespesa
 POST {{Grana.Api_HostAddress}}/api/categorias
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -105,6 +127,7 @@ Content-Type: application/json
 
 # @name criarCategoriaReceita
 POST {{Grana.Api_HostAddress}}/api/categorias
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -116,6 +139,7 @@ Content-Type: application/json
 
 # @name criarCategoriaSemUso
 POST {{Grana.Api_HostAddress}}/api/categorias
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -126,18 +150,22 @@ Content-Type: application/json
 ### Categorias: listar
 
 GET {{Grana.Api_HostAddress}}/api/categorias
+Authorization: Bearer {{token}}
 
 ### Categorias: listar por tipo
 
 GET {{Grana.Api_HostAddress}}/api/categorias?tipo=Despesa
+Authorization: Bearer {{token}}
 
 ### Categorias: buscar por id
 
 GET {{Grana.Api_HostAddress}}/api/categorias/{{categoriaDespesaId}}
+Authorization: Bearer {{token}}
 
 ### Categorias: editar nome e orçamento
 
 PUT {{Grana.Api_HostAddress}}/api/categorias/{{categoriaDespesaId}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -148,10 +176,12 @@ Content-Type: application/json
 ### Categorias: excluir (só sem lançamentos)
 
 DELETE {{Grana.Api_HostAddress}}/api/categorias/{{categoriaSemUsoId}}
+Authorization: Bearer {{token}}
 
 ### Lançamentos: criar receita
 
 POST {{Grana.Api_HostAddress}}/api/lancamentos
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -166,6 +196,7 @@ Content-Type: application/json
 
 # @name criarLancamento
 POST {{Grana.Api_HostAddress}}/api/lancamentos
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -179,18 +210,22 @@ Content-Type: application/json
 ### Lançamentos: listar
 
 GET {{Grana.Api_HostAddress}}/api/lancamentos
+Authorization: Bearer {{token}}
 
 ### Lançamentos: listar com filtros e paginação
 
 GET {{Grana.Api_HostAddress}}/api/lancamentos?contaId={{contaId}}&tipo=Despesa&dataInicio=2026-11-01&dataFim=2026-11-30&busca=feira&pagina=1&tamanhoPagina=20
+Authorization: Bearer {{token}}
 
 ### Lançamentos: buscar por id
 
 GET {{Grana.Api_HostAddress}}/api/lancamentos/{{lancamentoId}}
+Authorization: Bearer {{token}}
 
 ### Lançamentos: editar
 
 PUT {{Grana.Api_HostAddress}}/api/lancamentos/{{lancamentoId}}
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -204,6 +239,7 @@ Content-Type: application/json
 
 # @name criarTransferencia
 POST {{Grana.Api_HostAddress}}/api/transferencias
+Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
@@ -217,43 +253,54 @@ Content-Type: application/json
 ### Transferências: listar
 
 GET {{Grana.Api_HostAddress}}/api/transferencias
+Authorization: Bearer {{token}}
 
 ### Transferências: listar com filtros
 
 GET {{Grana.Api_HostAddress}}/api/transferencias?contaId={{contaId}}&dataInicio=2026-11-01&dataFim=2026-11-30
+Authorization: Bearer {{token}}
 
 ### Transferências: buscar por id
 
 GET {{Grana.Api_HostAddress}}/api/transferencias/{{transferenciaId}}
+Authorization: Bearer {{token}}
 
 ### Orçamentos: mês atual
 
 GET {{Grana.Api_HostAddress}}/api/orcamentos
+Authorization: Bearer {{token}}
 
 ### Orçamentos: mês informado
 
 GET {{Grana.Api_HostAddress}}/api/orcamentos?ano=2026&mes=11
+Authorization: Bearer {{token}}
 
 ### Resumo: mês atual
 
 GET {{Grana.Api_HostAddress}}/api/resumo
+Authorization: Bearer {{token}}
 
 ### Resumo: mês informado
 
 GET {{Grana.Api_HostAddress}}/api/resumo?ano=2026&mes=11
+Authorization: Bearer {{token}}
 
 ### Extrato: mês atual
 
 GET {{Grana.Api_HostAddress}}/api/contas/{{contaId}}/extrato
+Authorization: Bearer {{token}}
 
 ### Extrato: período informado
 
 GET {{Grana.Api_HostAddress}}/api/contas/{{contaId}}/extrato?dataInicio=2026-11-01&dataFim=2026-11-30
+Authorization: Bearer {{token}}
 
 ### Transferências: excluir (desfaz os saldos)
 
 DELETE {{Grana.Api_HostAddress}}/api/transferencias/{{transferenciaId}}
+Authorization: Bearer {{token}}
 
 ### Lançamentos: excluir (estorna o saldo)
 
 DELETE {{Grana.Api_HostAddress}}/api/lancamentos/{{lancamentoId}}
+Authorization: Bearer {{token}}

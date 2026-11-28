@@ -18,4 +18,11 @@ public sealed class UsuarioRepository(GranaDbContext contexto) : IUsuarioReposit
 
         return contexto.Usuarios.AnyAsync(u => u.Email == emailNormalizado, cancellationToken);
     }
+
+    public Task<Usuario> ObterUsuarioPorEmail(string email, CancellationToken cancellationToken)
+    {
+        var emailNormalizado = Usuario.NormalizarEmail(email);
+
+        return contexto.Usuarios.FirstOrDefaultAsync(u => u.Email == emailNormalizado, cancellationToken);
+    }
 }

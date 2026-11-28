@@ -22,6 +22,9 @@ public abstract class ApiController : ControllerBase
                 case TipoNotificacaoEnum.Conflito:
                     codigoErro = 409;
                     break;
+                case TipoNotificacaoEnum.NaoAutorizado:
+                    codigoErro = 401;
+                    break;
                 default:
                     codigoErro = 400;
                     break;

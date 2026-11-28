@@ -18,7 +18,7 @@ O objetivo do projeto é praticar regras de negócio bem feitas. Quem decide se 
 
 ## O que a API faz
 
-- **Usuários:** cadastro com nome, e-mail único e senha guardada só como hash.
+- **Usuários:** cadastro com nome, e-mail único e senha guardada só como hash, e login que devolve um token JWT válido por 2 horas. Todas as rotas, menos registro, login, `/health` e a documentação, exigem o token no cabeçalho `Authorization: Bearer`.
 - **Contas:** corrente, poupança ou carteira, com saldo inicial.
 - **Categorias:** de receita ou de despesa, com orçamento mensal opcional.
 - **Lançamentos:** entradas e saídas que atualizam o saldo da conta.
@@ -74,6 +74,7 @@ flowchart LR
 - **Unit of Work para salvar.** Os services alteram as entidades e chamam `Salvar` uma vez no fim. Uma transferência grava as duas contas e o registro num único `SaveChanges`, então ou tudo é salvo ou nada é. Se o domínio devolver erro, nada é salvo.
 - **Concorrência otimista na conta.** A `Conta` tem uma coluna `versao` que muda a cada alteração salva. Se duas operações carregam a mesma conta e as duas tentam salvar, só a primeira passa. A outra recebe 409 e nada dela é gravado, então dois débitos simultâneos não deixam o saldo negativo.
 - **Senha só como hash.** O domínio valida a senha e recebe o hash pronto, sem conhecer o algoritmo. O hash é gerado pelo `PasswordHasher<T>` do ASP.NET Core Identity (PBKDF2 com salt), e a senha nunca aparece na resposta nem no banco.
+- **Rotas protegidas por padrão.** A autorização tem uma política padrão que exige usuário autenticado, então todo endpoint novo já nasce protegido. As rotas públicas são marcadas uma a uma com `AllowAnonymous`. Senha errada e e-mail inexistente devolvem a mesma mensagem, e a senha é verificada nos dois casos, para não revelar quais e-mails estão cadastrados.
 - **Índices no banco.** Conta ativa com nome único, categoria única por tipo e nome, e índice na data dos lançamentos. Os services já validam isso, mas o banco garante a regra mesmo com requisições simultâneas.
 
 ---
@@ -97,7 +98,7 @@ O compose sobe três serviços em ordem:
 
 Com tudo no ar, a documentação interativa fica em `http://localhost:8080/scalar`.
 
-As credenciais do banco ficam no `.env`, que não é commitado. O `.env.example` traz os nomes das variáveis. Troque a senha antes de usar.
+As credenciais do banco e a chave de assinatura do JWT (`JWT_CHAVE`, com pelo menos 32 caracteres) ficam no `.env`, que não é commitado. O `.env.example` traz os nomes das variáveis. Troque a senha e a chave antes de usar.
 
 Para derrubar tudo, use `docker compose down`. Para apagar também os dados, use `docker compose down -v`.
 
@@ -120,13 +121,16 @@ docker run --name grana-postgres -e POSTGRES_USER=grana -e POSTGRES_PASSWORD=gra
 
 Depois disso, `docker start grana-postgres` liga o banco de novo e `docker stop grana-postgres` desliga.
 
-### 2. Configurar a connection string
+### 2. Configurar a connection string e a chave do JWT
 
-A connection string não fica no repositório. Em desenvolvimento ela vem do user-secrets:
+A connection string e a chave de assinatura do JWT não ficam no repositório. Em desenvolvimento elas vêm do user-secrets:
 
 ```bash
 dotnet user-secrets set "ConnectionStrings:Grana" "Host=localhost;Port=5432;Database=grana;Username=grana;Password=grana" --project src/Grana.Api
+dotnet user-secrets set "Jwt:Chave" "uma-chave-sua-com-pelo-menos-32-caracteres" --project src/Grana.Api
 ```
+
+A API não sobe sem a chave ou com uma chave de menos de 32 caracteres.
 
 ### 3. Criar as tabelas e rodar
 
@@ -148,15 +152,15 @@ dotnet run --project src/Grana.Api -- --SeedDemo=true
 
 O seed cria 3 contas (Nubank, Inter e Carteira), 6 categorias com orçamento, lançamentos do mês anterior e do mês atual e duas transferências. Assim o resumo, o orçamento e o extrato já mostram números de verdade. O seed só roda em Development e só quando o banco não tem nenhuma conta, então ligar de novo não duplica nada. Também dá para deixar `"SeedDemo": true` no `appsettings.Development.json`.
 
-O usuário demo e as credenciais entram junto com a autenticação.
+O usuário demo e as credenciais entram junto com o isolamento de dados por usuário.
 
 ### Testando os endpoints
 
-O arquivo `src/Grana.Api/Grana.Api.http` tem uma requisição para cada endpoint e roda no Visual Studio, no Rider ou no VS Code com a extensão REST Client. As requisições são encadeadas: as primeiras criam contas, categorias, um lançamento e uma transferência, e as seguintes usam os ids dessas respostas. É só executar de cima para baixo. Os nomes não colidem com os do seed. Para rodar o arquivo de novo, limpe o banco ou troque os nomes, porque conta e categoria não aceitam nome repetido.
+O arquivo `src/Grana.Api/Grana.Api.http` tem uma requisição para cada endpoint e roda no Visual Studio, no Rider ou no VS Code com a extensão REST Client. As requisições são encadeadas: as primeiras registram um usuário e fazem login, e o token vai no cabeçalho de todas as outras. Depois vêm contas, categorias, um lançamento e uma transferência, e as seguintes usam os ids dessas respostas. É só executar de cima para baixo. Os nomes não colidem com os do seed. Para rodar o arquivo de novo, limpe o banco ou troque os nomes, porque conta e categoria não aceitam nome repetido.
 
 ### Documentação
 
-Com a API rodando, a documentação interativa fica em `http://localhost:5180/scalar`, e o documento OpenAPI em `http://localhost:5180/openapi/v1.json`. Cada endpoint traz um exemplo de requisição, exemplos de resposta para cada código possível (200, 201, 204, 400, 404 e 409) e o esquema Bearer, que vai servir para as rotas autenticadas.
+Com a API rodando, a documentação interativa fica em `http://localhost:5180/scalar`, e o documento OpenAPI em `http://localhost:5180/openapi/v1.json`. Cada endpoint traz um exemplo de requisição, exemplos de resposta para cada código possível (200, 201, 204, 400, 401, 404 e 409) e o esquema Bearer nas rotas protegidas. Para testar pelo Scalar, faça login, copie o `token` da resposta e cole em Authentication.
 
 ### Testes
 
